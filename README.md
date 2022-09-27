@@ -1,6 +1,6 @@
 # Tmux session wizard
 
-One prefix key to rule them all;
+One prefix key to rule them all:
 - Creating a new session from a list of recently accessed directories
 - Naming a session after a folder/project
 - Switching sessions
@@ -47,10 +47,10 @@ Reload TMUX environment with `$ tmux source-file ~/.tmux.conf`, and that's it.
 
 ### (Optional) Using the script outside of tmux
 
-Run `curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t` to download the script and add it to your path. You can then run `t` from anywhere to use the script.
+Run `curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t && chmod u+x /usr/local/bin/t` to download the script and add it to your path. You can then run `t` from anywhere to use the script.
 
 You can also run `t` with a relative or absolute path to a directory to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
 
 ### License
 
-[MIT](LICENSE.md)
+[MIT](LICENCE.md)
