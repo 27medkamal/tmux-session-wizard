@@ -40,7 +40,7 @@ Clone the repo:
 Add this line to the bottom of `.tmux.conf`:
 
 ```tmux
-run-shell ~/clone/path/sensible.tmux
+run-shell ~/clone/path/tmux-session-wizarda.tmux
 ```
 
 Reload TMUX environment with `$ tmux source-file ~/.tmux.conf`, and that's it.
