@@ -1,6 +1,6 @@
 # Tmux session wizard
 
-One prefix key to rule them all:
+One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [zoxide](https://github.com/ajeetdsouza/zoxide)):
 - Creating a new session from a list of recently accessed directories
 - Naming a session after a folder/project
 - Switching sessions
