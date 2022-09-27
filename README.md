@@ -1,7 +1,6 @@
 # Tmux session wizard
 
-![tmux-session-wizard](https://user-images.githubusercontent.com/14043848/192538765-8cd20112-cb64-4555-8b17-79e590cd401a.png)
-
+<img width="500" alt="tmux-session-wizard" src="https://user-images.githubusercontent.com/14043848/192539480-ad2f56cb-ef0a-407e-b507-b338cab92f1e.png">
 
 One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [zoxide](https://github.com/ajeetdsouza/zoxide)):
 - Creating a new session from a list of recently accessed directories
