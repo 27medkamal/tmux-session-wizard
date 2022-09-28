@@ -21,8 +21,6 @@ What if you could use 1 prefix key to do all of this? Read on!
 ### Required
 You must have [fzf](https://github.com/junegunn/fzf), [zoxide](https://github.com/ajeetdsouza/zoxide) installed and available in your path.
 
-Optionally, if you'd like the bash script to be used outside of tmux (below), you should also install [coreutils](https://www.gnu.org/software/coreutils/) which you can install on macOS using `brew install coreutils`.
-
 ### Installation with [Tmux Plugin Manager](https://github.com/tmux-plugins/tpm) (recommended)
 
 Add plugin to the list of TPM plugins in `.tmux.conf`:
@@ -58,7 +56,7 @@ set -g @session-wizard 'T'
 
 Run `curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t && chmod u+x /usr/local/bin/t` to download the script and add it to your path. You can then run `t` from anywhere to use the script.
 
-You can also run `t` with a relative or absolute path to a directory to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
+You can also run `t` with a relative or absolute path to a directory (similar to [zoxide](https://github.com/ajeetdsouza/zoxide)) to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
 
 Also, depending on the terminal emulator you use, you can make it always start what that script.
 

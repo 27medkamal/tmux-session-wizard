@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
@@ -8,11 +8,12 @@ __fzfcmd() {
     echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
 }
 
+eval "$(zoxide init bash)"
 
 # Parse optional argument
 if [ "$1" ]; then
   # Argument is given
-  RESULT=$(zoxide query $1 2> /dev/null || realpath $1)
+  RESULT=$(z $@ && pwd)
 else
   # No argument is given. Use FZF
   RESULT=$((tmux list-sessions -F "#{session_name}: #{session_windows} window(s)\
@@ -42,3 +43,4 @@ if [ -z "$TMUX" ]; then
 else
   tmux switch-client -t $SESSION
 fi
+
