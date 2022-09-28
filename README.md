@@ -60,6 +60,10 @@ You can also run `t` with a relative or absolute path to a directory (similar to
 
 Also, depending on the terminal emulator you use, you can make it always start what that script.
 
+### Inspiration
+- ThePrimeagen's [tmux-sessionizer](https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer)
+- Josh Medeski's [t](https://github.com/joshmedeski/dotfiles/blob/main/mackup/.config/bin/t)
+
 ### License
 
 [MIT](LICENCE.md)
