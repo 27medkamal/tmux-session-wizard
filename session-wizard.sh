@@ -8,11 +8,10 @@ __fzfcmd() {
     echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
 }
 
-eval "$(zoxide init bash)"
-
 # Parse optional argument
 if [ "$1" ]; then
   # Argument is given
+  eval "$(zoxide init bash)"
   RESULT=$(z $@ && pwd)
 else
   # No argument is given. Use FZF
