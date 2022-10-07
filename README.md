@@ -54,7 +54,11 @@ set -g @session-wizard 'T'
 ```
 ### (Optional) Using the script outside of tmux
 
-Run `curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t && chmod u+x /usr/local/bin/t` to download the script and add it to your path. You can then run `t` from anywhere to use the script.
+Run the following to download the script and add it to your path.
+```bash
+curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t && chmod u+x /usr/local/bin/t
+```
+You can then run `t` from anywhere to use the script. 
 
 You can also run `t` with a relative or absolute path to a directory (similar to [zoxide](https://github.com/ajeetdsouza/zoxide)) to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
 
