@@ -41,7 +41,7 @@ Clone the repo:
 Add this line to the bottom of `.tmux.conf`:
 
 ```tmux
-run-shell ~/clone/path/tmux-session-wizarda.tmux
+run-shell ~/clone/path/tmux-session-wizard.tmux
 ```
 
 Reload TMUX environment with `$ tmux source-file ~/.tmux.conf`, and that's it.
