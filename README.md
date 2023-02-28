@@ -67,7 +67,7 @@ Also, depending on the terminal emulator you use, you can make it always start w
 
 ### Inspiration
 - ThePrimeagen's [tmux-sessionizer](https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer)
-- Josh Medeski's [t](https://github.com/joshmedeski/dotfiles/blob/main/mackup/.config/bin/t)
+- Josh Medeski's [t-smart-tmux-session-manager](https://github.com/joshmedeski/t-smart-tmux-session-manager)
 
 ### License
 
