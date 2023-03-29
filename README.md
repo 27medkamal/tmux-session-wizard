@@ -2,8 +2,8 @@
 
 <img width="500" alt="tmux-session-wizard" src="https://user-images.githubusercontent.com/14043848/195257556-bc2cfe0a-a1c7-4e29-9741-776eaf0caa06.png">
 
-One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [zoxide](https://github.com/ajeetdsouza/zoxide)):
 
+One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [zoxide](https://github.com/ajeetdsouza/zoxide)):
 - Creating a new session from a list of recently accessed directories
 - Naming a session after a folder/project
 - Switching sessions
@@ -20,7 +20,6 @@ What if you could use 1 prefix key to do all of this? Read on!
 `prefix + T` (customisable) - displays a pop-up with [fzf](https://github.com/junegunn/fzf) which displays the existing sessions followed by recently accessed directories (using [zoxide](https://github.com/ajeetdsouza/zoxide)). Choose the session or the directory and voila! You're in that session. If the session doesn't exist, it will be created.
 
 ### Required
-
 You must have [fzf](https://github.com/junegunn/fzf), [zoxide](https://github.com/ajeetdsouza/zoxide) installed and available in your path.
 
 ### Installation with [Tmux Plugin Manager](https://github.com/tmux-plugins/tpm) (recommended)
@@ -37,7 +36,7 @@ Hit `prefix + I` to fetch the plugin and source it. That's it!
 
 Clone the repo:
 
-    git clone https://github.com/27medkamal/tmux-session-wizard ~/clone/path
+    $ git clone https://github.com/27medkamal/tmux-session-wizard ~/clone/path
 
 Add this line to the bottom of `.tmux.conf`:
 
@@ -66,19 +65,16 @@ set -g @session-wizard-width 80
 ### (Optional) Using the script outside of tmux
 
 Run the following to download the script and add it to your path.
-
 ```bash
 curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t && chmod u+x /usr/local/bin/t
 ```
-
-You can then run `t` from anywhere to use the script.
+You can then run `t` from anywhere to use the script. 
 
 You can also run `t` with a relative or absolute path to a directory (similar to [zoxide](https://github.com/ajeetdsouza/zoxide)) to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
 
 Also, depending on the terminal emulator you use, you can make it always start what that script.
 
 ### Inspiration
-
 - ThePrimeagen's [tmux-sessionizer](https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer)
 - Josh Medeski's [t-smart-tmux-session-manager](https://github.com/joshmedeski/t-smart-tmux-session-manager)
 
