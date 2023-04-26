@@ -30,7 +30,7 @@ if [[ $RESULT == *":"* ]]; then
   SESSION=${SESSION//:/}
 else
   # RESULT is a path
-  SESSION=$(basename $RESULT | tr . _)
+  SESSION=$(basename $RESULT | tr . _ | tr '[:upper:]' '[:lower:]')
   if ! tmux has-session -t=$SESSION 2> /dev/null; then
     tmux new-session -d -s $SESSION -c $RESULT
   fi
