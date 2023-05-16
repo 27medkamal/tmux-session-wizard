@@ -54,8 +54,7 @@ You can customise the prefix key by adding this line to your `.tmux.conf`:
 set -g @session-wizard 'T'
 ```
 
-Height and width of tmux popup can be customized by setting the
-following globals
+You can also customise the height and width of the tmux popup by adding the follwing lines to your `.tmux.conf`:
 
 ```tmux
 set -g @session-wizard-height 40
