@@ -15,9 +15,9 @@ if [ "$1" ]; then
   RESULT=$(z $@ && pwd)
 else
   # No argument is given. Use FZF
-  RESULT=$((tmux list-sessions -F "#{session_name}: #{session_windows} window(s)\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}\
-#{?session_attached, (attached),}"; zoxide query -l) | $(__fzfcmd) --reverse)
+  RESULT=$((tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}"\
+| sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-; zoxide query -l)  | $(__fzfcmd) --reverse)
   if [ -z "$RESULT" ]; then
     exit 0
   fi
