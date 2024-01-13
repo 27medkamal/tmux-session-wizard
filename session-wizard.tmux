@@ -2,40 +2,19 @@
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-declare -A default_config
-declare -A tmux_options
-
-default_config=(
+declare -A default_config=(
     [key_bindings_session_wizard]="T"
     [height]=40
     [width]=80
     [keybind_split]=","
 )
 
-tmux_options=(
+declare -A tmux_options=(
     [session_wizard]="@session-wizard"
     [session_wizard_height]="@session-wizard-height"
     [session_wizard_width]="@session-wizard-width"
     [keybind_split]="@session-wizard-keybind-split"
 )
-
-# # Multiple bindings can be set. Default binding is "T".
-set_session_wizard_options() {
-    local key_bindings
-    key_bindings=$(get_tmux_option "${tmux_options[session_wizard]}" "${default_config[key_bindings_session_wizard]}")
-    local height
-    height=$(get_tmux_option "${tmux_options[session_wizard_height]}" "${default_config[height]}")
-    local width
-    width=$(get_tmux_option "${tmux_options[session_wizard_width]}" "${default_config[width]}")
-    local split
-    split=$(get_tmux_option "${tmux_options[keybind_split]}" "${default_config[keybind_split]}")
-
-    local key
-    IFS="$split" read -ra bindings <<< "$key_bindings"
-    for key in "${bindings[@]}"; do
-        tmux bind "$key" display-popup -w "$width"% -h "$height"% -E "$CURRENT_DIR/session-wizard.sh"
-    done
-}
 
 get_tmux_option() {
     local option=$1
@@ -43,7 +22,27 @@ get_tmux_option() {
     tmux show-option -gqv "$option" || echo "$default_value"
 }
 
-function main {
+get_config_value() {
+    local key=$1
+    get_tmux_option "${tmux_options[$key]}" "${default_config[$key]}"
+}
+
+set_session_wizard_options() {
+    declare -A config_values
+
+    config_values[key_bindings]=$(get_config_value "session_wizard")
+    config_values[height]=$(get_config_value "session_wizard_height")
+    config_values[width]=$(get_config_value "session_wizard_width")
+    config_values[split]=$(get_config_value "keybind_split")
+
+    IFS="${config_values[split]}" read -ra bindings <<< "${config_values[key_bindings]}"
+    for key in "${bindings[@]}"; do
+        tmux bind "$key" display-popup -w "${config_values[width]}"% -h "${config_values[height]}"% -E "$CURRENT_DIR/session-wizard.sh"
+    done
+}
+
+main() {
     set_session_wizard_options
 }
+
 main
