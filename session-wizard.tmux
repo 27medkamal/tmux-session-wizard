@@ -2,23 +2,37 @@
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-default_key_bindings_session_wizard="T"
-tmux_option_session_wizard="@session-wizard"
-tmux_option_session_wizard_height="@session-wizard-height"
-default_height=40
-tmux_option_session_wizard_width="@session-wizard-width"
-default_width=80
+declare -A default_config
+declare -A tmux_options
 
-# Multiple bindings can be set. Default binding is "T".
+default_config=(
+    [key_bindings_session_wizard]="T"
+    [height]=40
+    [width]=80
+    [keybind_split]=","
+)
+
+tmux_options=(
+    [session_wizard]="@session-wizard"
+    [session_wizard_height]="@session-wizard-height"
+    [session_wizard_width]="@session-wizard-width"
+    [keybind_split]="@session-wizard-keybind-split"
+)
+
+# # Multiple bindings can be set. Default binding is "T".
 set_session_wizard_options() {
     local key_bindings
-    key_bindings=$(get_tmux_option "$tmux_option_session_wizard" "$default_key_bindings_session_wizard")
+    key_bindings=$(get_tmux_option "${tmux_options[session_wizard]}" "${default_config[key_bindings_session_wizard]}")
     local height
-    height=$(get_tmux_option "$tmux_option_session_wizard_height" "$default_height")
+    height=$(get_tmux_option "${tmux_options[session_wizard_height]}" "${default_config[height]}")
     local width
-    width=$(get_tmux_option "$tmux_option_session_wizard_width" "$default_width")
+    width=$(get_tmux_option "${tmux_options[session_wizard_width]}" "${default_config[width]}")
+    local split
+    split=$(get_tmux_option "${tmux_options[keybind_split]}" "${default_config[keybind_split]}")
+
     local key
-    for key in "${key_bindings[@]}"; do
+    IFS="$split" read -ra bindings <<< "$key_bindings"
+    for key in "${bindings[@]}"; do
         tmux bind "$key" display-popup -w "$width"% -h "$height"% -E "$CURRENT_DIR/session-wizard.sh"
     done
 }
