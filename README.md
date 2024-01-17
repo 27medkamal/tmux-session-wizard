@@ -52,6 +52,7 @@ You can customise the prefix key by adding this line to your `.tmux.conf`:
 
 ```tmux
 set -g @session-wizard 'T'
+set -g @session-wizard 'T K' # for multiple key bindings
 ```
 
 You can also customise the height and width of the tmux popup by adding the follwing lines to your `.tmux.conf`:
