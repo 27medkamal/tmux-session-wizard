@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$CURRENT_DIR/src/helpers.sh"
 
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
@@ -39,7 +41,7 @@ else
   # Promote rank in zoxide.
   zoxide add "$RESULT"
 
-  SESSION=$(basename "$RESULT" | tr . - | tr ' ' - | tr ':' - | tr '[:upper:]' '[:lower:]')
+  SESSION=$(session_name --full-path "$RESULT")
   if ! tmux has-session -t=$SESSION 2> /dev/null; then
     tmux new-session -d -s $SESSION -c "$RESULT"
   fi
@@ -51,4 +53,3 @@ if [ -z "$TMUX" ]; then
 else
   tmux switch-client -t $SESSION
 fi
-
