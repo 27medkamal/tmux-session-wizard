@@ -20,5 +20,5 @@ TEST_PATH="/MOO/.foo BAR/.moo FOO-bar.baz"
 
 @test "create session name with shortened path and last folder in path" {
   name=$(session_name --short-path "$TEST_PATH")
-  assert_equal "$name" "/mo/_f/_moo-foo-bar-baz"
+  assert_equal "$name" "/mo/_f/_moo-foo-bar_baz"
 }

@@ -62,13 +62,22 @@ set -g @session-wizard-height 40
 set -g @session-wizard-width 80
 ```
 
+To customise the way, session name is created use one `@session-wizard-mode` options. Three allowed values are:
+ - `folder` (default)
+ - `full-path`
+ - `short-path`
+
+```tmux
+set -g @session-wizard-mode "full-path"
+```
+
 ### (Optional) Using the script outside of tmux
 
 Run the following to download the script and add it to your path.
 ```bash
 curl https://raw.githubusercontent.com/27medkamal/tmux-session-wizard/master/session-wizard.sh > /usr/local/bin/t && chmod u+x /usr/local/bin/t
 ```
-You can then run `t` from anywhere to use the script. 
+You can then run `t` from anywhere to use the script.
 
 You can also run `t` with a relative or absolute path to a directory (similar to [zoxide](https://github.com/ajeetdsouza/zoxide)) to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
 

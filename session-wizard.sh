@@ -42,6 +42,10 @@ else
   zoxide add "$RESULT"
 
   SESSION=$(session_name --full-path "$RESULT")
+  DEFAULT_MODE="folder"
+  MODE=$(tmux show-option -gqv "@session-wizard-mode")
+  MODE=${MODE:-$DEFAULT_MODE}
+  SESSION=$(session_name --"$MODE" "$RESULT")
   if ! tmux has-session -t=$SESSION 2> /dev/null; then
     tmux new-session -d -s $SESSION -c "$RESULT"
   fi
