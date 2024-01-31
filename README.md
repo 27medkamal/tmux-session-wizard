@@ -62,13 +62,20 @@ set -g @session-wizard-height 40
 set -g @session-wizard-width 80
 ```
 
-To customise the way, session name is created use one `@session-wizard-mode` options. Three allowed values are:
+To customise the way, session name is created use `@session-wizard-mode` option. Three allowed values are:
  - `folder` (default)
  - `full-path`
  - `short-path`
 
 ```tmux
 set -g @session-wizard-mode "full-path"
+```
+
+If you want, you can replace a HOME path with a shorter symbol, to do it set `@session-wizard-home-symbol` option.
+Don't use `~` (tilde) because it has special meaning in Tmux and will make plugin to behave unpredictable.
+
+```tmux
+set -g @session-wizard-home-symbol "≁"
 ```
 
 ### (Optional) Using the script outside of tmux

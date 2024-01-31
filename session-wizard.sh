@@ -45,15 +45,20 @@ else
   DEFAULT_MODE="folder"
   MODE=$(tmux show-option -gqv "@session-wizard-mode")
   MODE=${MODE:-$DEFAULT_MODE}
+  DIR=$RESULT
+  if [ -n "$(tmux show-option -gqv "@session-wizard-home-symbol")" ]; then
+    RESULT=$(fold_home "$(tmux show-option -gqv "@session-wizard-home-symbol")" "$RESULT")
+  fi
   SESSION=$(session_name --"$MODE" "$RESULT")
-  if ! tmux has-session -t=$SESSION 2> /dev/null; then
-    tmux new-session -d -s $SESSION -c "$RESULT"
+  if ! tmux has-session -t="$SESSION" 2> /dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$DIR"
   fi
 fi
 
 # Attach to session
 if [ -z "$TMUX" ]; then
-  tmux attach -t $SESSION
+  tmux attach -t "$SESSION"
 else
-  tmux switch-client -t $SESSION
+
+  tmux switch-client -t "$SESSION"
 fi

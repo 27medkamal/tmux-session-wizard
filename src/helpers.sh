@@ -18,3 +18,9 @@ session_name() {
     return 1
   fi
 }
+
+fold_home() {
+  SYMBOL="$1"
+  shift
+  echo "$@" | sed "s;^$HOME;$SYMBOL;"
+}
