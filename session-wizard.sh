@@ -42,12 +42,12 @@ else
   zoxide add "$RESULT"
 
   SESSION=$(session_name --full-path "$RESULT")
-  DEFAULT_MODE="folder"
-  MODE=$(tmux show-option -gqv "@session-wizard-mode")
-  MODE=${MODE:-$DEFAULT_MODE}
+  MODE=$(get_tmux_option "@session-wizard-mode" "folder")
+  HOME_SYMBOL=$(get_tmux_option "@session-wizard-home-symbol" "")
+  # DIR is used because RESULT can be changed after home folding
   DIR=$RESULT
-  if [ -n "$(tmux show-option -gqv "@session-wizard-home-symbol")" ]; then
-    RESULT=$(fold_home "$(tmux show-option -gqv "@session-wizard-home-symbol")" "$RESULT")
+  if [ -n "$HOME_SYMBOL" ]; then
+    RESULT=$(fold_home "$HOME_SYMBOL" "$RESULT")
   fi
   SESSION=$(session_name --"$MODE" "$RESULT")
   if ! tmux has-session -t="$SESSION" 2> /dev/null; then
