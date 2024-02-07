@@ -15,9 +15,9 @@ if [ "$1" ]; then
   RESULT=$(z $@ && pwd)
 else
   # No argument is given. Use FZF
-  RESULT=$((tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
+  RESULT=$( (tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}"\
-| sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-; zoxide query -l)  | $(__fzfcmd) --reverse)
+| sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-; zoxide query -l)  | $(__fzfcmd) --reverse --print-query | tail -n 1)
   if [ -z "$RESULT" ]; then
     exit 0
   fi
@@ -30,6 +30,15 @@ if [[ $RESULT == *":"* ]]; then
   SESSION=${SESSION//:/}
 else
   # RESULT is a path
+
+  # Quit if directory does not exists
+  if [ ! -d "$RESULT" ]; then
+    exit 0
+  fi
+
+  # Promote rank in zoxide.
+  zoxide add "$RESULT"
+
   SESSION=$(basename "$RESULT" | tr . - | tr ' ' - | tr ':' - | tr '[:upper:]' '[:lower:]')
   if ! tmux has-session -t=$SESSION 2> /dev/null; then
     tmux new-session -d -s $SESSION -c "$RESULT"
