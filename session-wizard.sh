@@ -15,8 +15,8 @@ if [ "$1" ]; then
   RESULT=$(z $@ && pwd)
 else
   # No argument is given. Use FZF
-  RESULT=$( (tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}"\
+  RESULT=$( (tmux list-windows -a -F "#{session_last_attached} #{session_name}/#{window_name}\
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}"\
 | sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-; zoxide query -l)  | $(__fzfcmd) --reverse --print-query | tail -n 1)
   if [ -z "$RESULT" ]; then
     exit 0
@@ -24,10 +24,15 @@ else
 fi
 
 # Get or create session
-if [[ $RESULT == *":"* ]]; then
+if [[ $RESULT != "/"* ]]; then
   # RESULT comes from list-sessions
   SESSION=$(echo $RESULT | awk '{print $1}')
   SESSION=${SESSION//:/}
+  if [[ $SESSION == *"/"* ]]; then
+    WINDOW=$(echo $SESSION | awk -F'/' '{ print $2 }')
+    SESSION=$(echo $SESSION | awk -F'/' '{ print $1 }')
+    WINDOW=$(echo "$WINDOW" | sed 's/ (attached)//')  # remove (attached) if it's present
+  fi
 else
   # RESULT is a path
 
@@ -52,3 +57,6 @@ else
   tmux switch-client -t $SESSION
 fi
 
+if [ ! -z "$WINDOW" ]; then
+  tmux select-window -t $WINDOW
+fi
