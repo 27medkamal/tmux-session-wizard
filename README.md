@@ -94,11 +94,11 @@ Also, depending on the terminal emulator you use, you can make it always start w
 
 Development environment is built with Nix and Nix's Flakes, if you have it on your system then just run `nix develop` and you are ready to go. Other method is to build Docker image based on provided Dockerfile:
 ```bash
-docker build --tag session-wizard-dev --file ./Dockerfile .
+docker build --tag tmux-session-wizard:dev --file ./Dockerfile .
 ```
-To run test just run `bats ./tests` for local development environment or `docker run --rm -it -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD session-wizard-dev bats ./tests` if you use Docker.
+To run tests just run `bats ./tests` for local development environment or `docker run --rm -it -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD tmux-session-wizard:dev bats ./tests` if you use Docker.
 
-There is also helper script for it ./scripts/run-tests.sh, run `./scripts/run-tests.sh -h` to get more information about usage.
+There is also the helper script for it *./scripts/run-tests.sh*, run `./scripts/run-tests.sh -h` to get more information about usage.
 
 ### Inspiration
 - ThePrimeagen's [tmux-sessionizer](https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer)
