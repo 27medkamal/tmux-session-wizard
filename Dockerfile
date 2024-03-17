@@ -32,4 +32,3 @@ RUN ["mkdir","-p", "/usr/bin"]
 RUN ["ln","-s", "/workspace/result/bin/env", "/usr/bin/env"]
 # For bats
 RUN ["mkdir","--mode", "1777", "/tmp"]
-ENTRYPOINT ["/bin/bash"]
