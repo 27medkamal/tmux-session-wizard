@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$CURRENT_DIR/src/helpers.sh"
 
 default_key_bindings_session_wizard="T"
 tmux_option_session_wizard="@session-wizard"
@@ -21,18 +22,6 @@ set_session_wizard_options() {
     for key in $(echo "${key_bindings}" | sed 's/ /\n/g'); do
         tmux bind "$key" display-popup -w "$width"% -h "$height"% -E "$CURRENT_DIR/session-wizard.sh"
     done
-}
-
-get_tmux_option() {
-    local option=$1
-    local default_value=$2
-    local option_value
-    option_value="$(tmux show-option -gqv "$option")"
-    if [ "$option_value" = "" ]; then
-        echo "$default_value"
-    else
-        echo "$option_value"
-    fi
 }
 
 function main {
