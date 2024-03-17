@@ -1,1 +1,7 @@
+# IDE
 .idea
+
+# Nix
+.envrc
+.direnv
+result

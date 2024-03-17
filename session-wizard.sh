@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$CURRENT_DIR/src/helpers.sh"
 
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
@@ -39,16 +41,24 @@ else
   # Promote rank in zoxide.
   zoxide add "$RESULT"
 
-  SESSION=$(basename "$RESULT" | tr . - | tr ' ' - | tr ':' - | tr '[:upper:]' '[:lower:]')
-  if ! tmux has-session -t=$SESSION 2> /dev/null; then
-    tmux new-session -d -s $SESSION -c "$RESULT"
+  SESSION=$(session_name --full-path "$RESULT")
+  MODE=$(get_tmux_option "@session-wizard-mode" "folder")
+  HOME_SYMBOL=$(get_tmux_option "@session-wizard-home-symbol" "")
+  # DIR is used because RESULT can be changed after home folding
+  DIR=$RESULT
+  if [ -n "$HOME_SYMBOL" ]; then
+    RESULT=$(fold_home "$HOME_SYMBOL" "$RESULT")
+  fi
+  SESSION=$(session_name --"$MODE" "$RESULT")
+  if ! tmux has-session -t="$SESSION" 2> /dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$DIR"
   fi
 fi
 
 # Attach to session
 if [ -z "$TMUX" ]; then
-  tmux attach -t $SESSION
+  tmux attach -t "$SESSION"
 else
-  tmux switch-client -t $SESSION
-fi
 
+  tmux switch-client -t "$SESSION"
+fi
