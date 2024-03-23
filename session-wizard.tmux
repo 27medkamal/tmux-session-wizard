@@ -8,6 +8,8 @@ tmux_option_session_wizard_height="@session-wizard-height"
 default_height=40
 tmux_option_session_wizard_width="@session-wizard-width"
 default_width=80
+tmux_option_session_wizard_windows="@session-wizard-windows"
+default_windows="off"
 
 # Multiple bindings can be set. Default binding is "T".
 set_session_wizard_options() {
@@ -17,9 +19,12 @@ set_session_wizard_options() {
     height=$(get_tmux_option "$tmux_option_session_wizard_height" "$default_height")
     local width
     width=$(get_tmux_option "$tmux_option_session_wizard_width" "$default_width")
+    local windows windowstr
+    windows=$(get_tmux_option "$tmux_option_session_wizard_windows" "$default_windows")
+    [[ $windows = "on" ]] && windowstr='-w'
     local key
     for key in $(echo "${key_bindings}" | sed 's/ /\n/g'); do
-        tmux bind "$key" display-popup -w "$width"% -h "$height"% -E "$CURRENT_DIR/session-wizard.sh"
+        tmux bind "$key" display-popup -w "$width"% -h "$height"% -E "$CURRENT_DIR/session-wizard.sh $windowstr"
     done
 }
 

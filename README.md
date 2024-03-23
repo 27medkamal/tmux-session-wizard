@@ -62,6 +62,13 @@ set -g @session-wizard-height 40
 set -g @session-wizard-width 80
 ```
 
+By default, `tmux-session-wizard` gives you a list of open sessions (hence the name).
+If you prefer to switch to a window directly, you can add this line to your `.tmux.conf`:
+
+```tmux
+set -g @session-wizard-windows on
+```
+
 ### (Optional) Using the script outside of tmux
 
 Run the following to download the script and add it to your path.
