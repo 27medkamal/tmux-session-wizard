@@ -23,7 +23,7 @@ if [ $dir ]; then
   RESULT=$(z "$argument" && pwd)
 else
   if [ $windows ]; then
-    RESULT=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}/#{window_name}\
+    RESULT=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}→#{window_name}\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}")
   else
     RESULT=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
@@ -43,8 +43,8 @@ if [[ ! $dir -eq 1 ]]; then
   SESSION=$(echo $RESULT | awk '{print $1}')
   SESSION=${SESSION//:/}
   if [ $windows ]; then
-    WINDOW=$(echo $SESSION | awk -F'/' '{ print $2 }')
-    SESSION=$(echo $SESSION | awk -F'/' '{ print $1 }')
+    WINDOW=$(echo $SESSION | awk -F'→' '{ print $2 }')
+    SESSION=$(echo $SESSION | awk -F'→' '{ print $1 }')
   fi
 else
   # RESULT is a path
