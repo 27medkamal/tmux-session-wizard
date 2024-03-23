@@ -38,14 +38,13 @@ else
 fi
 
 # Get or create session
-if [[ $RESULT != "/"* ]]; then
-  # RESULT comes from list-sessions
+if [[ ! $dir -eq 1 ]]; then
+  # RESULT comes from tmux
   SESSION=$(echo $RESULT | awk '{print $1}')
   SESSION=${SESSION//:/}
-  if [[ $SESSION == *"/"* ]]; then
+  if [ $windows ]; then
     WINDOW=$(echo $SESSION | awk -F'/' '{ print $2 }')
     SESSION=$(echo $SESSION | awk -F'/' '{ print $1 }')
-    WINDOW=$(echo "$WINDOW" | sed 's/ (attached)//')  # remove (attached) if it's present
   fi
 else
   # RESULT is a path
