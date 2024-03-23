@@ -8,15 +8,29 @@ __fzfcmd() {
     echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
 }
 
-# Parse optional argument
-if [ "$1" ]; then
-  # Argument is given
+for argument in "$@"; do
+  if [[ $argument != "-w" ]]; then
+    # An argument is given that is not -w: directory
+    dir=1
+    break
+  else
+    windows=1
+  fi
+done
+
+if [ $dir ]; then
   eval "$(zoxide init bash)"
-  RESULT=$(z $@ && pwd)
+  RESULT=$(z "$argument" && pwd)
 else
+  if [ $windows ]; then
+    RESULT=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}→#{window_name}\
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}")
+  else
+    RESULT=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
+  fi
   # No argument is given. Use FZF
-  RESULT=$( (tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}"\
+  RESULT=$( ( echo "$RESULT" \
 | sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-; zoxide query -l)  | $(__fzfcmd) --reverse --print-query | tail -n 1)
   if [ -z "$RESULT" ]; then
     exit 0
@@ -24,10 +38,14 @@ else
 fi
 
 # Get or create session
-if [[ $RESULT == *":"* ]]; then
-  # RESULT comes from list-sessions
+if [[ ! $dir -eq 1 ]]; then
+  # RESULT comes from tmux
   SESSION=$(echo $RESULT | awk '{print $1}')
   SESSION=${SESSION//:/}
+  if [ $windows ]; then
+    WINDOW=$(echo $SESSION | awk -F'→' '{ print $2 }')
+    SESSION=$(echo $SESSION | awk -F'→' '{ print $1 }')
+  fi
 else
   # RESULT is a path
 
@@ -52,3 +70,6 @@ else
   tmux switch-client -t $SESSION
 fi
 
+if [ ! -z "$WINDOW" ]; then
+  tmux select-window -t $WINDOW
+fi
