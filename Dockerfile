@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.4
-FROM nixos/nix:2.21.2 AS builder
+FROM nixos/nix:latest AS builder
 
 WORKDIR /tmp/build
 RUN mkdir /tmp/nix-store-closure
