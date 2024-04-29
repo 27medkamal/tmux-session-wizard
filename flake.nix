@@ -19,9 +19,10 @@
           src = self;
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postInstall = ''
+          ls -al $target && \
             substituteInPlace $target/session-wizard.tmux \
-              --replace  \$CURRENT_DIR/session-wizard.sh $target/session-wizard.sh
-            wrapProgram $target/session-wizard.sh \
+              --replace  \$CURRENT_DIR/bin/t $target/bin/t
+            wrapProgram $target/bin/t \
               --prefix PATH : ${with pkgs; lib.makeBinPath ([ fzf zoxide coreutils gnugrep gnused ])}
           '';
         };

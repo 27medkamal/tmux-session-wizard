@@ -34,33 +34,18 @@ unset() {
   assert_output "foo"
 }
 
-@test "create session name with last folder in path" {
-  run session_name --folder "$TEST_PATH"
-  assert_output "_moo-foo-bar_baz"
+@test "create session name with last directory in path" {
+  run session_name --directory "$TEST_PATH"
+  assert_output "-moo-foo-bar-baz"
 }
 
 @test "create session name with full path" {
   run session_name --full-path "$TEST_PATH"
-  assert_output "/moo/_foo-bar/_moo-foo-bar_baz"
+  assert_output "/moo/-foo-bar/-moo-foo-bar-baz"
 }
 
-@test "create session name with shortened path and last folder in path" {
+@test "create session name with shortened path and last directory in path" {
   run session_name --short-path "$TEST_PATH"
-  assert_output "/mo/_f/_moo-foo-bar_baz"
+  assert_output "/mo/-f/-moo-foo-bar-baz"
 }
 
-@test "fold home directory to symbol" {
-  HOME="/home/user"
-  local folder="/home/user"
-
-  run fold_home "++" "$folder"
-  assert_output "++"
-}
-
-@test "fold home directory to symbol with path" {
-  local HOME="/home/user"
-  local folder="/home/user/.foo/M O O"
-
-  run fold_home "++" "$folder"
-  assert_output "++/.foo/M O O"
-}
