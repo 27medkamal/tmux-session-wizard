@@ -117,6 +117,8 @@ fish_add_path $HOME/.tmux/plugins/tmux-session-wizard/bin
 fish_add_path $HOME/.config/tmux/plugins/tmux-session-wizard/bin
 ```
 
+</details>
+
 You can then run `t` from anywhere to use the script.
 
 You can also run `t` with a relative or absolute path to a directory (similar to [zoxide](https://github.com/ajeetdsouza/zoxide)) to create a session for that directory. For example, `t ~/projects/my-project` will create a session named `my-project` and cd into that directory.
