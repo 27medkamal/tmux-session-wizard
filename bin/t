@@ -6,18 +6,6 @@ source "$CURRENT_DIR/../src/helpers.sh"
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
 
-__fzfcmd() {
-  [ -n "$TMUX_PANE" ] && { [ "${FZF_TMUX:-0}" != 0 ] || [ -n "$FZF_TMUX_OPTS" ]; } &&
-    echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
-}
-
-HOME_REPLACER=""                                          # default to a noop
-echo "$HOME" | grep -E "^[a-zA-Z0-9\-_/.@]+$" &>/dev/null # chars safe to use in sed
-HOME_SED_SAFE=$?
-if [ $HOME_SED_SAFE -eq 0 ]; then # $HOME should be safe to use in sed
-  HOME_REPLACER="s|^$HOME/|~/|"
-fi
-
 # Parse optional argument
 if [ "$1" ]; then
   # Argument is given
