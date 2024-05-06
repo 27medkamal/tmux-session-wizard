@@ -65,6 +65,9 @@ if [[ -n "$TMP_SESSION_NAME" ]]; then
 fi
 
 # Attach to session
+# Escape tilde which if appears by itself, tmux will interpret as a marked target
+# https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
+SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
 if [ -z "$TMUX" ]; then
   tmux attach -t "$SESSION"
 else
