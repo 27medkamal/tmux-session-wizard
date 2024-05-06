@@ -1,0 +1,75 @@
+#!/bin/bash
+
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$CURRENT_DIR/../src/helpers.sh"
+
+# Usage: t <optional zoxide-like dir, relative or absolute path>
+# If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
+
+# Parse optional argument
+if [ "$1" ]; then
+  # Argument is given
+  eval "$(zoxide init bash)"
+  RESULT=$(z $@ && pwd)
+else
+  # No argument is given. Use FZF
+  RESULT=$( (
+    tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}" |
+      sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
+    zoxide query -l | sed -e "$HOME_REPLACER"
+  ) | $(__fzfcmd) --reverse --print-query | tail -n 1)
+  if [ -z "$RESULT" ]; then
+    exit 0
+  fi
+fi
+
+# Makes sure tmux is running in order to get all the correct tmux options below. Gets cleaned at the bottom
+if ! tmux info &>/dev/null; then
+  TMP_SESSION_DIR=$(mktemp -d)
+  TMP_SESSION_NAME=$(session_name --full-path "$TMP_SESSION_DIR")
+  tmux new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
+fi
+
+# Get or create session
+if [[ $RESULT == *":"* ]]; then
+  # RESULT comes from list-sessions
+  SESSION=$(echo $RESULT | awk '{print $1}')
+  SESSION=${SESSION//:/}
+else
+  # RESULT is a path
+
+  DIR_FULL=$(echo "$RESULT" | sed -e "s|^~/|$HOME/|")
+  DIR_WITH_TILDE=$(echo "$RESULT" | sed -e "$HOME_REPLACER") # in case it came from a direct usage of `t <path>`
+
+  # Quit if directory does not exists
+  if [ ! -d "$DIR_FULL" ]; then
+    exit 0
+  fi
+
+  # Promote rank in zoxide.
+  zoxide add "$DIR_FULL"
+
+  MODE=$(get_tmux_option "@session-wizard-mode" "directory")
+  SESSION=$(session_name --"$MODE" "$DIR_WITH_TILDE")
+
+  if ! tmux has-session -t="$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$SESSION" -c "$DIR_FULL"
+  fi
+fi
+
+# Clean up tmp session
+if [[ -n "$TMP_SESSION_NAME" ]]; then
+  tmux kill-session -t "$TMP_SESSION_NAME" 2>/dev/null
+  rm -rf "$TMP_SESSION_DIR"
+fi
+
+# Attach to session
+# Escape tilde which if appears by itself, tmux will interpret as a marked target
+# https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
+SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
+if [ -z "$TMUX" ]; then
+  tmux attach -t "$SESSION"
+else
+  tmux switch-client -t "$SESSION"
+fi
