@@ -39,7 +39,7 @@ if [[ $RESULT == *":"* ]]; then
 else
   # RESULT is a path
 
-  DIR_FULL=$(echo "$RESULT" | sed -e "s|^~/|$HOME/|")
+  DIR_FULL=$(echo "$RESULT" | sed -e "$TILDE_REPLACER")
   DIR_WITH_TILDE=$(echo "$RESULT" | sed -e "$HOME_REPLACER") # in case it came from a direct usage of `t <path>`
 
   # Quit if directory does not exists
@@ -65,7 +65,7 @@ if [[ -n "$TMP_SESSION_NAME" ]]; then
 fi
 
 # Attach to session
-# Escape tilde which if appears by itself, tmux will interpret as a marked target
+# Escape tilde which if it appears by itself, tmux will interpret as a marked target
 # https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
 SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
 if [ -z "$TMUX" ]; then
