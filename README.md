@@ -37,7 +37,7 @@ Hit `prefix + I` to fetch the plugin and source it. That's it!
 
 Clone the repo:
 
-    $ git clone https://github.com/27medkamal/tmux-session-wizard ~/clone/path
+    git clone https://github.com/27medkamal/tmux-session-wizard ~/clone/path
 
 Add this line to the bottom of `.tmux.conf`:
 
@@ -71,6 +71,12 @@ To customise the way session names are created, use `@session-wizard-mode` optio
 
 ```tmux
 set -g @session-wizard-mode "full-path"
+```
+
+By default, `tmux-session-wizard` gives you a list of open sessions (hence the name). An alternative is that it gives you a list of _windows_ to choose from. This can be turned on using the setting `@session-wizard-windows`. Add this line to your `.tmux.conf` to enable this behaviour:
+
+```tmux
+set -g @session-wizard-windows on # default is off
 ```
 
 ### (Optional) Using the script outside of tmux
