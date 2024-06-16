@@ -40,7 +40,7 @@ fi
 
 # Get or create session
 if [[ $RESULT == *":"* ]]; then
-  # RESULT comes from list-sessions
+  # RESULT comes from list-sessions or list-windows
   SESSION=$(echo $RESULT | awk '{print $1}')
   SESSION=${SESSION//:/}
   if [ "$SELECT_WINDOW" == "on" ]; then

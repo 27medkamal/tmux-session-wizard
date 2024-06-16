@@ -76,7 +76,7 @@ set -g @session-wizard-mode "full-path"
 By default, `tmux-session-wizard` gives you a list of open sessions (hence the name). An alternative is that it gives you a list of _windows_ to choose from. This can be turned on using the setting `@session-wizard-windows`. Add this line to your `.tmux.conf` to enable this behaviour:
 
 ```tmux
-set -g @session-wizard-windows on
+set -g @session-wizard-windows on # default is off
 ```
 
 ### (Optional) Using the script outside of tmux
