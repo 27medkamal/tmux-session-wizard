@@ -21,7 +21,8 @@ else
     RESULT=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
   fi
-  RESULT=$( (echo "$RESULT" |
+  RESULT=$( (
+    echo "$RESULT" |
       sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
     zoxide query -l | sed -e "$HOME_REPLACER"
   ) | $(__fzfcmd) --reverse --print-query | tail -n 1)
@@ -83,6 +84,6 @@ else
   tmux switch-client -t "$SESSION"
 fi
 
-if [ ! -z "$WINDOW" ]; then
+if [ -n "$WINDOW" ]; then
   tmux select-window -t "$SESSION:$WINDOW"
 fi
