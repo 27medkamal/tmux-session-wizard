@@ -25,7 +25,7 @@ else
     echo "$RESULT" |
       sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
     zoxide query -l | sed -e "$HOME_REPLACER"
-  ) | $(__fzfcmd) --reverse --print-query | tail -n 1)
+  ) | $(__fzfcmd) --reverse --print-query --tiebreak=index | tail -n 1)
   if [ -z "$RESULT" ]; then
     exit 0
   fi
