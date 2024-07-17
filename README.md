@@ -1,5 +1,8 @@
 # Tmux session wizard
 
+![GitHub](https://img.shields.io/github/license/27medkamal/tmux-session-wizard)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/27medkamal/tmux-session-wizard)
+
 <img width="500" alt="tmux-session-wizard" src="https://user-images.githubusercontent.com/14043848/195257556-bc2cfe0a-a1c7-4e29-9741-776eaf0caa06.png">
 
 One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [zoxide](https://github.com/ajeetdsouza/zoxide)):
