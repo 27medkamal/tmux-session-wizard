@@ -151,6 +151,14 @@ There is also the helper script for it _./scripts/run-tests.sh_, run `./scripts/
 - ThePrimeagen's [tmux-sessionizer](https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer)
 - Josh Medeski's [t-smart-tmux-session-manager](https://github.com/joshmedeski/t-smart-tmux-session-manager)
 
+
+### Contributors 🙌
+
+<a href="https://github.com/27medkamal/tmux-session-wizard/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=27medkamal/tmux-session-wizard" />
+</a>
+
+
 ### License
 
 [MIT](LICENCE.md)
