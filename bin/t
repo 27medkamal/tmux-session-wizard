@@ -35,7 +35,13 @@ fi
 if ! tmux info &>/dev/null; then
   TMP_SESSION_DIR=$(mktemp -d)
   TMP_SESSION_NAME=$(session_name --full-path "$TMP_SESSION_DIR")
-  tmux new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
+  # Allow for custom tmux config (mostly for testing)
+  if [ -n "$TMUX_CONFIG" ]; then
+    tmux -f "$TMUX_CONFIG" new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
+  else
+    tmux new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
+  fi
+
 fi
 
 # Get or create session
@@ -79,7 +85,11 @@ fi
 # https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
 SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
 if [ -z "$TMUX" ]; then
-  tmux attach -t "$SESSION"
+  if [ -n "$INTEGRATION_TEST" ]; then
+    echo "Running integrtion test, so not attaching to tmux session"
+  else
+    tmux attach -t "$SESSION"
+  fi
 else
   tmux switch-client -t "$SESSION"
 fi

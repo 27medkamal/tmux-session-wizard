@@ -4,33 +4,45 @@
 
 PROJECT_ROOT="$(dirname "$(dirname "$(realpath "$0")")")"
 IMAGE="tmux-session-wizard:dev"
+FILTER=""
 
-while getopts "crwh" opt; do
+while getopts "crwhui" opt; do
   case $opt in
-    c) CONTAINER=true
-      ;;
-    r) REBUILD=true
-      ;;
-    w) WATCH=true
-      ;;
-    h)
-      echo "Usage: run-tests.sh"
-      echo "Run tests for the project"
-      echo "  -c  Run tests inside a container (image: ${IMAGE})"
-      echo "  -r  Rebuild the container image before running tests, set also -c opiton by default"
-      echo "  -w  Watch changes in project and then run tests"
-      echo "  -h  Display this help message"
-      exit 0
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
+  c)
+    CONTAINER=true
+    ;;
+  r)
+    REBUILD=true
+    ;;
+  w)
+    WATCH=true
+    ;;
+  u)
+    FILTER="$FILTER --filter-tags unit"
+    ;;
+  i)
+    FILTER="$FILTER --filter-tags integration"
+    ;;
+  h)
+    echo "Usage: run-tests.sh"
+    echo "Run tests for the project"
+    echo "  -c  Run tests inside a container (image: ${IMAGE})"
+    echo "  -r  Rebuild the container image before running tests, set also -c opiton by default"
+    echo "  -w  Watch changes in project and then run tests"
+    echo "  -u  Run only unit tests"
+    echo "  -i  Run only integration tests"
+    echo "  -h  Display this help message"
+    exit 0
+    ;;
+  \?)
+    echo "Invalid option: -$OPTARG" >&2
+    exit 1
+    ;;
   esac
 done
 
 # Basic command to run tests
-CMD=(bats "$PROJECT_ROOT/tests")
+CMD=(bats $FILTER --recursive "$PROJECT_ROOT/tests")
 
 # Run tests in watch mode
 if [ "$WATCH" = true ]; then
@@ -43,13 +55,12 @@ if [ "$CONTAINER" = true ] || [ "$REBUILD" = true ]; then
   IS_IMAGE_EXISTS=$(docker images -q ${IMAGE})
 fi
 
-if [ -z "$IS_IMAGE_EXISTS" ] &&  [ "$CONTAINER" = true ] || [ "$REBUILD" = true ] ; then
+if [ -z "$IS_IMAGE_EXISTS" ] && [ "$CONTAINER" = true ] || [ "$REBUILD" = true ]; then
   docker build -t ${IMAGE} -f "$PROJECT_ROOT/Dockerfile" "$PROJECT_ROOT"
 fi
 
 echo "----------------------------------------------------------------------------"
+echo "Filter: $FILTER"
 echo "Running tests with command: ${CMD[*]}"
 echo "----------------------------------------------------------------------------"
 "${CMD[@]}"
-
-

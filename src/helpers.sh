@@ -15,6 +15,17 @@ get_tmux_option() {
   fi
 }
 
+# Prevents overriding user's options
+set_tmux_option() {
+  local option="$1"
+  local default_value="$2"
+  local option_value
+  option_value=$(tmux show-option -gqv "$option")
+  if [ -z "$option_value" ]; then
+    tmux set-option -g "$option" "$default_value"
+  fi
+}
+
 session_name() {
   if [ "$1" = "--directory" ]; then
     shift
