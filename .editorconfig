@@ -1,4 +1,4 @@
-[*.{sh,tmux,bats}]
+[*.{sh,tmux,bats,bash}]
 indent_style = space
 indent_size = 2
 

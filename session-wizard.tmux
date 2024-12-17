@@ -14,6 +14,7 @@ set_default_session_wizard_options() {
   set_tmux_option "@session-wizard" "T"
   set_tmux_option "@session-wizard-height" "40"
   set_tmux_option "@session-wizard-width" "80"
+  set_tmux_option "@session-wizard-mode" "directory"
 }
 
 # Multiple bindings can be set. Default binding is "T".
