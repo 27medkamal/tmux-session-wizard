@@ -1,0 +1,7 @@
+[*.{sh,tmux,bats}]
+indent_style = space
+indent_size = 2
+
+[t]
+indent_style = space
+indent_size = 2
