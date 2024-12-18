@@ -16,7 +16,7 @@
           version = "unstable";
           src = self;
           nativeBuildInputs = [ pkgs.makeWrapper ];
-          postInstall = ''
+          postInstall = /* bash */''
             substituteInPlace $target/session-wizard.tmux --replace  \$CURRENT_DIR $target
             wrapProgram $target/bin/t \
               --prefix PATH : ${

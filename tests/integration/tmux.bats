@@ -18,7 +18,7 @@ teardown() {
 }
 
 @test "Can overwrite default options" {
-  echo "set-option -g @session-wizard 't'" >>/tmp/tmux.conf
+  echo "set-option -g @session-wizard 't'" >>"$TEST_DIR/tmux.conf"
   t .
   assert_tmux_running
   # Checking default key binding for session wizard plugin

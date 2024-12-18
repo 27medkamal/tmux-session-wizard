@@ -85,7 +85,7 @@ fi
 # https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
 SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
 if [ -z "$TMUX" ]; then
-  if [ -n "$INTEGRATION_TEST" ]; then
+  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
     echo "Running integrtion test, so not attaching to tmux session"
   else
     tmux attach -t "$SESSION"
