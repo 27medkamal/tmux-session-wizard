@@ -18,6 +18,8 @@ _common_setup() {
   bats_require_minimum_version 1.5.0
   bats_load_library 'bats-support'
   bats_load_library 'bats-assert'
+  # relative to the test file, not to the current directory
+  load ./lib/tmux-assert
 
   DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")" >/dev/null 2>&1 && pwd)"
   PATH="$DIR/../../bin:$PATH"
@@ -34,24 +36,4 @@ _common_setup() {
 _common_teardown() {
   _stop_tmux
   rm -rf "$TEST_DIR"
-}
-
-assert_tmux_running() {
-  run pgrep tmux
-  assert_success
-}
-
-assert_tmux_option_equal() {
-  local option=$1
-  local expected=$2
-  local actual
-  actual="$(tmux show-option -gqv "$option")"
-  assert_equal "$actual" "$expected"
-}
-
-assert_tmux_session_number() {
-  local expected=$1
-  local actual
-  actual="$(tmux list-sessions | wc -l)"
-  assert_equal "$actual" "$expected"
 }

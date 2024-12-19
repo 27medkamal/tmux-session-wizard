@@ -13,16 +13,15 @@ teardown() {
   assert_tmux_option_equal "@session-wizard-mode" "directory"
 }
 
-assert_session_name() {
+verify_session_name() {
   local dir="$1"
   local expected_session_name="$2"
   mkdir -p "$dir"
   # Run session-wizard
   t "$dir"
   # Check if session was created with expected name
-  assert_tmux_session_number 1
-  session_name="$(tmux list-sessions -F "#{session_name}")"
-  assert_equal "$session_name" "$expected_session_name"
+  assert_tmux_sessions_number 1
+  assert_tmux_session_exists "$expected_session_name"
   # Cleanup
   _stop_tmux
 }
@@ -37,7 +36,7 @@ assert_session_name() {
 
   for expected_session_name in "${!test_data[@]}"; do
     dir="${test_data[${expected_session_name}]}"
-    assert_session_name "$dir" "$expected_session_name"
+    verify_session_name "$dir" "$expected_session_name"
   done
 }
 
@@ -53,7 +52,7 @@ assert_session_name() {
 
   for expected_session_name in "${!test_data[@]}"; do
     dir="${test_data[${expected_session_name}]}"
-    assert_session_name "$dir" "$expected_session_name"
+    verify_session_name "$dir" "$expected_session_name"
   done
 }
 
@@ -69,22 +68,22 @@ assert_session_name() {
 
   for expected_session_name in "${!test_data[@]}"; do
     dir="${test_data[${expected_session_name}]}"
-    assert_session_name "$dir" "$expected_session_name"
+    verify_session_name "$dir" "$expected_session_name"
   done
 }
 
 @test "Run session-wizzard twice with the same directory should create ONLY one session" {
   mkdir -p "$TEST_DIR/dir"
   t "$TEST_DIR/dir"
-  assert_tmux_session_number 1
+  assert_tmux_sessions_number 1
   t "$TEST_DIR/dir"
-  assert_tmux_session_number 1
+  assert_tmux_sessions_number 1
 }
 @test "Run session-wizzard twice with different directory should create two sessions" {
   mkdir -p "$TEST_DIR/dir1"
   mkdir -p "$TEST_DIR/dir2"
   t "$TEST_DIR/dir1"
-  assert_tmux_session_number 1
+  assert_tmux_sessions_number 1
   t "$TEST_DIR/dir2"
-  assert_tmux_session_number 2
+  assert_tmux_sessions_number 2
 }
