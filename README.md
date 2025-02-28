@@ -142,7 +142,7 @@ The development environment is built with Nix and Nix's Flakes, if you have it o
 docker build --tag tmux-session-wizard:dev --file ./Dockerfile .
 ```
 
-To run the tests, just run `bats ./tests` for local development environment or `docker run --rm -it -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD tmux-session-wizard:dev bats ./tests` if you are using Docker.
+To run the tests, just run `bats -r ./tests` for local development environment or `docker run --rm -it -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD tmux-session-wizard:dev bats -r ./tests` if you are using Docker.
 
 There is also the helper script for it _./scripts/run-tests.sh_, run `./scripts/run-tests.sh -h` to get more information about usage.
 
@@ -151,13 +151,11 @@ There is also the helper script for it _./scripts/run-tests.sh_, run `./scripts/
 - ThePrimeagen's [tmux-sessionizer](https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer)
 - Josh Medeski's [t-smart-tmux-session-manager](https://github.com/joshmedeski/t-smart-tmux-session-manager)
 
-
 ### Contributors 🙌
 
 <a href="https://github.com/27medkamal/tmux-session-wizard/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=27medkamal/tmux-session-wizard" />
 </a>
-
 
 ### License
 
