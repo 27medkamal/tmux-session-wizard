@@ -8,7 +8,7 @@ _stop_tmux() {
 }
 
 _add_tmux_plugin() {
-  export _ZO_DATA_DIR="$TEST_DIR/zoxite"
+  export _ZO_DATA_DIR="$TEST_DIR/zoxide"
   DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")" >/dev/null 2>&1 && pwd)"
   export TMUX_CONFIG="$TEST_DIR/tmux.conf"
   echo "run-shell $DIR/../../session-wizard.tmux" >"$TMUX_CONFIG"

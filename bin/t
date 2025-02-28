@@ -36,7 +36,7 @@ if ! tmux info &>/dev/null; then
   TMP_SESSION_DIR=$(mktemp -d)
   TMP_SESSION_NAME=$(session_name --full-path "$TMP_SESSION_DIR")
   # Allow for custom tmux config (mostly for testing)
-  if [ -n "$TMUX_CONFIG" ]; then
+  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
     tmux -f "$TMUX_CONFIG" new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
   else
     tmux new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
