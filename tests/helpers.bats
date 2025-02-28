@@ -1,3 +1,4 @@
+# bats file_tags=unit
 setup() {
   bats_load_library 'bats-support'
   bats_load_library 'bats-assert'
@@ -48,4 +49,3 @@ unset() {
   run session_name --short-path "$TEST_PATH"
   assert_output "/mo/-f/-moo-foo-bar-baz"
 }
-

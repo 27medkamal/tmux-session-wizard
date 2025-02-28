@@ -10,6 +10,14 @@ default_height=40
 tmux_option_session_wizard_width="@session-wizard-width"
 default_width=80
 
+set_default_session_wizard_options() {
+  set_tmux_option "@session-wizard" "T"
+  set_tmux_option "@session-wizard-height" "40"
+  set_tmux_option "@session-wizard-width" "80"
+  set_tmux_option "@session-wizard-mode" "directory"
+  set_tmux_option "@session-wizard-windows" "off"
+}
+
 # Multiple bindings can be set. Default binding is "T".
 set_session_wizard_options() {
   local key_bindings
@@ -25,6 +33,7 @@ set_session_wizard_options() {
 }
 
 function main {
+  set_default_session_wizard_options
   set_session_wizard_options
 }
 main
