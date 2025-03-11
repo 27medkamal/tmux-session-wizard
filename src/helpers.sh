@@ -42,6 +42,20 @@ session_name() {
   fi
 }
 
+log_message() {
+  local log_file
+  log_file=$(get_tmux_option "@session-wizard-log-file")
+  if [ -z "$log_file" ]; then
+    return 0
+  fi
+  local message="$1"
+  local timestamp
+  local log_entry
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  log_entry="${timestamp} ${message}"
+  echo "$log_entry" >>"$log_file"
+}
+
 HOME_REPLACER=""                                          # default to a noop
 TILDE_REPLACER=""                                         # default to a noop
 echo "$HOME" | grep -E "^[a-zA-Z0-9\-_/.@]+$" &>/dev/null # chars safe to use in sed

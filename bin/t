@@ -3,6 +3,21 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$CURRENT_DIR/../src/helpers.sh"
 
+# Makes sure tmux is running in order to get all the correct tmux options below. Gets cleaned at the bottom
+if ! tmux info &>/dev/null; then
+  TMP_SESSION_DIR=$(mktemp -d)
+  TMP_SESSION_NAME=$(session_name --full-path "$TMP_SESSION_DIR")
+  # Allow for custom tmux config (mostly for testing)
+  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
+    tmux -f "$TMUX_CONFIG" new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
+  else
+    tmux new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
+  fi
+
+fi
+
+log_message "Running session-wizard plugin..."
+
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
 
@@ -29,19 +44,6 @@ else
   if [ -z "$RESULT" ]; then
     exit 0
   fi
-fi
-
-# Makes sure tmux is running in order to get all the correct tmux options below. Gets cleaned at the bottom
-if ! tmux info &>/dev/null; then
-  TMP_SESSION_DIR=$(mktemp -d)
-  TMP_SESSION_NAME=$(session_name --full-path "$TMP_SESSION_DIR")
-  # Allow for custom tmux config (mostly for testing)
-  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
-    tmux -f "$TMUX_CONFIG" new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
-  else
-    tmux new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
-  fi
-
 fi
 
 # Get or create session
