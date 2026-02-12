@@ -69,7 +69,21 @@ else
   MODE=$(get_tmux_option "@session-wizard-mode" "directory")
   SESSION=$(session_name --"$MODE" "$DIR_WITH_TILDE")
 
-  if ! tmux has-session -t="$SESSION" 2>/dev/null; then
+  if tmux has-session -t="$SESSION" 2>/dev/null; then
+    # Session needs a new name
+    SESSIONS_PATH=$(tmux list-sessions -F "#{session_name}:#{session_path}" | grep "$DIR_FULL")
+    if [ -n "$SESSIONS_PATH" ]; then
+      RESULT=$( (
+        echo -e "$SESSIONS_PATH"
+      ) | $(__fzfcmd) --reverse --print-query --tiebreak=index --bind 'ctrl-y:print-query' \
+          --header $'\x1b[1;32m'"To begin a new session, type a name and press Ctrl+y,"`
+                               `" or press Enter to select the highlighted session." | tail -n 1)
+
+      SESSION=$(echo "$RESULT" | awk -F ':' '{print $1}')
+    fi
+  fi
+
+  if [ -n "$SESSION" ]; then
     tmux new-session -d -s "$SESSION" -c "$DIR_FULL"
   fi
 fi
