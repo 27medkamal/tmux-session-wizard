@@ -25,7 +25,7 @@ _common_setup() {
   PATH="$DIR/../../bin:$PATH"
 
   if [ -n "$TMUX" ]; then
-    fail "Plase run these tests outisde of tmux"
+    fail "Please run these tests outside of tmux"
   fi
   mkdir -p "$TEST_DIR"
   export SESSION_WIZARD_INTEGRATION_TEST=true

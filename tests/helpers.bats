@@ -8,7 +8,7 @@ setup() {
   TEST_PATH="/MOO/.foo BAR/.moo FOO-bar.baz"
 }
 
-unset() {
+teardown() {
   unset TEST_PATH
 }
 

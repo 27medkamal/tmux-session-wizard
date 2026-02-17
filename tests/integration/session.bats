@@ -72,14 +72,14 @@ verify_session_name() {
   done
 }
 
-@test "Run session-wizzard twice with the same directory should create ONLY one session" {
+@test "Run session-wizard twice with the same directory should create ONLY one session" {
   mkdir -p "$TEST_DIR/dir"
   t "$TEST_DIR/dir"
   assert_tmux_sessions_number 1
   t "$TEST_DIR/dir"
   assert_tmux_sessions_number 1
 }
-@test "Run session-wizzard twice with different directory should create two sessions" {
+@test "Run session-wizard twice with different directory should create two sessions" {
   mkdir -p "$TEST_DIR/dir1"
   mkdir -p "$TEST_DIR/dir2"
   t "$TEST_DIR/dir1"
