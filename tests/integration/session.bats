@@ -18,10 +18,11 @@ verify_session_name() {
   local expected_session_name="$2"
   mkdir -p "$dir"
   # Run session-wizard
-  t "$dir"
+  run t "$dir"
+  assert_tmux_session_attached "$expected_session_name"
   # Check if session was created with expected name
   assert_tmux_sessions_number 1
-  assert_tmux_session_exists "$expected_session_name"
+  assert_tmux_session_exists --index 0 "$expected_session_name"
   # Cleanup
   _stop_tmux
 }

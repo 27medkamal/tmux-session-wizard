@@ -3,6 +3,9 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$CURRENT_DIR/../src/helpers.sh"
 
+# Usage: t <optional zoxide-like dir, relative or absolute path>
+# If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
+
 # Makes sure tmux is running in order to get all the correct tmux options below. Gets cleaned at the bottom
 if ! tmux info &>/dev/null; then
   TMP_SESSION_DIR=$(mktemp -d)
@@ -17,9 +20,6 @@ if ! tmux info &>/dev/null; then
 fi
 
 log_message "Running session-wizard plugin..."
-
-# Usage: t <optional zoxide-like dir, relative or absolute path>
-# If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
 
 # Parse optional argument
 if [ "$*" ]; then
@@ -82,20 +82,4 @@ if [[ -n "$TMP_SESSION_NAME" ]]; then
   rm -rf "$TMP_SESSION_DIR"
 fi
 
-# Attach to session
-# Escape tilde which if it appears by itself, tmux will interpret as a marked target
-# https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
-SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
-if [ -z "$TMUX" ]; then
-  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
-    echo "Running integration test, so not attaching to tmux session"
-  else
-    tmux attach -t "$SESSION"
-  fi
-else
-  tmux switch-client -t "$SESSION"
-fi
-
-if [ -n "$WINDOW" ]; then
-  tmux select-window -t "$SESSION:$WINDOW"
-fi
+attach_to_tmux_session "$SESSION" "$WINDOW"

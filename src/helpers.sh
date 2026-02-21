@@ -26,6 +26,32 @@ set_tmux_option() {
   fi
 }
 
+attach_to_tmux_session() {
+  local session_name
+  local window
+
+  session_name="$1"
+  window="$2"
+  # Attach to session
+  # Escape tilde which if it appears by itself, tmux will interpret as a marked target
+  # https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
+  session_name=$(echo "$session_name" | sed 's/^~$/\\~/')
+  # TODO: This should be removed and I should use some kind of test double (mock) for tmux
+  if [ -n "$BATS_TEST_TMPDIR" ]; then
+    echo "$session_name" >"$BATS_TEST_TMPDIR/attached_session"
+    exit 0
+  fi
+  if [ -z "$TMUX" ]; then
+    tmux attach -t "$session_name"
+  else
+    tmux switch-client -t "$session_name"
+  fi
+
+  if [ -n "$window" ]; then
+    tmux select-window -t "$session_name:$window"
+  fi
+}
+
 session_name() {
   if [ "$1" = "--directory" ]; then
     shift
