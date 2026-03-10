@@ -134,6 +134,66 @@ You can also run `t` with a relative or absolute path to a directory (similar to
 
 Also, depending on the terminal emulator you use, you can make it always start what that script.
 
+### Extending plugin's functionality
+
+This is simplified diagram of how the plugin works. You can extend its functionality using the `pre-create-session-hook`.
+
+```mermaid
+flowchart LR
+    A[Resolve path] --> B[Generate session name]
+    B --> C[pre-create-session-hook]
+    C --> D[Create session if needed]
+    D --> E[Attach to session]
+```
+
+#### pre-create-session-hook
+
+The hook runs every time the plugin is invoked, before checking whether the session already exists. This allows you to modify the session name, the target directory, or both.
+
+The hook receives two positional arguments:
+- `$1` - session name
+- `$2` - target directory
+
+To modify values, the hook should print two lines to stdout:
+1. The session name (first line)
+2. The target directory (second line)
+
+If the hook prints nothing, the original values are used unchanged.
+
+**Configuration:**
+
+Set the `@session-wizard-pre-create-session-hook` tmux option to a script or command:
+
+```bash
+set -g @session-wizard-pre-create-session-hook '/path/to/hook-script.sh'
+```
+
+**Examples:**
+These examples are not very realistic usecases, just to see basic usage of hook. More realistic example is in examples folder.
+
+Add a prefix to all session names:
+
+```bash
+#!/bin/bash
+echo "work-$1"
+echo "$2"
+```
+
+Log session creation without modifying anything (output nothing to keep original values):
+
+```bash
+#!/bin/bash
+echo "$(date) - session: $1, dir: $2" >> /tmp/session-wizard.log
+```
+
+#### Resolve session conflict hook
+
+A more complete example is provided in [`examples/resolve-session-conflict-hook.sh`](examples/resolve-session-conflict-hook.sh). It handles the case where two different directories generate the same session name (e.g. both have a subdirectory called `src`). When a conflict is detected, it prompts the user via fzf to pick a new name and remembers the choice in `/tmp/tmux-session-wizard-mappings` (resets on reboot).
+
+```bash
+set -g @session-wizard-pre-create-session-hook '/path/to/resolve-session-conflict-hook.sh'
+```
+
 ### Development
 
 The development environment is built with Nix and Nix's Flakes, if you have it on your system then just run `nix develop` and you are ready to go. Other method is to build the Docker image based on provided Dockerfile:

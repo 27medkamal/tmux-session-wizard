@@ -1,0 +1,2 @@
+shell=bash
+disable=SC2329,SC3043

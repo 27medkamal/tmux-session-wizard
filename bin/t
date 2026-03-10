@@ -71,9 +71,7 @@ else
   MODE=$(get_tmux_option "@session-wizard-mode" "directory")
   SESSION=$(session_name --"$MODE" "$DIR_WITH_TILDE")
 
-  if ! tmux has-session -t="$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "$SESSION" -c "$DIR_FULL"
-  fi
+  SESSION=$(create_session "$SESSION" "$DIR_FULL")
 fi
 
 # Clean up tmp session

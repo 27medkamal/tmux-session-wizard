@@ -68,6 +68,29 @@ session_name() {
   fi
 }
 
+create_session() {
+  local session="$1"
+  local dir="$2"
+
+  local pre_hook
+  pre_hook=$(get_tmux_option "@session-wizard-pre-create-session-hook")
+  if [ -n "$pre_hook" ]; then
+    log_message "Running pre-create-session-hook: $pre_hook"
+    local hook_output
+    hook_output=$(eval "$pre_hook" "$session" "$dir")
+    if [ -n "$hook_output" ]; then
+      session=$(echo "$hook_output" | sed -n '1p')
+      dir=$(echo "$hook_output" | sed -n '2p')
+    fi
+  fi
+
+  if ! tmux has-session -t="$session" 2>/dev/null; then
+    tmux new-session -d -s "$session" -c "$dir"
+  fi
+
+  echo "$session"
+}
+
 log_message() {
   local log_file
   log_file=$(get_tmux_option "@session-wizard-log-file")
