@@ -11,6 +11,7 @@ One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [
 - Naming a session after a directory/project
 - Switching sessions
 - Viewing current or creating new sessions in one popup
+- Previewing sessions & directories(with [eza](https://github.com/eza-community/eza)) in one popup
 
 ### Elevator Pitch
 
@@ -80,6 +81,12 @@ By default, `tmux-session-wizard` gives you a list of open sessions (hence the n
 
 ```tmux
 set -g @session-wizard-windows on # default is off
+```
+
+By default, `tmux-session-wizard` doesn't previews the sessions or directories. This can be turned on using the setting `@session-wizard-preview`. Add this line to your `.tmux.conf` to enable this behaviour:
+
+```tmux
+set -g @session-wizard-preview on # default is off
 ```
 
 ### (Optional) Using the script outside of tmux

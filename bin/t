@@ -21,11 +21,34 @@ else
     RESULT=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
   fi
+  # No argument is given. No preview
+  PREVIEW=$(get_tmux_option "@session-wizard-preview" "off")
+  if [ "$PREVIEW" == "on" ]; then
+  RESULT=$( (
+    echo "$RESULT" |
+      sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
+    zoxide query -l | sed -e "$HOME_REPLACER"
+  ) | $(__fzfcmd) --reverse --preview 'bash -c '"'"'line="$1"
+  if [[ "$line" == *:* ]]; then
+    sess="${line%%:*}"
+    win="$(echo "$line" | sed -n "s/.*(\\([0-9][0-9]*\\)).*/\\1/p")"
+    if [ -n "$win" ]; then
+      target="${sess}:${win}"
+    else
+      target="${sess}"
+    fi
+    tmux capture-pane -ept "$target" 2>/dev/null
+  else
+    eza --tree --level=1 --color=always "$line"
+  fi
+  '"'"' _ {}' --print-query --tiebreak=index | tail -n 1)
+  else
   RESULT=$( (
     echo "$RESULT" |
       sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
     zoxide query -l | sed -e "$HOME_REPLACER"
   ) | $(__fzfcmd) --reverse --print-query --tiebreak=index | tail -n 1)
+  fi
   if [ -z "$RESULT" ]; then
     exit 0
   fi
