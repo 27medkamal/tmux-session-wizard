@@ -3,6 +3,13 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$CURRENT_DIR/../src/helpers.sh"
 
+# Internal mode used by the fzf popup's ctrl-x reload action to refresh the
+# list after killing a session. Not a public CLI flag.
+if [ "$1" == "--list-sessions" ]; then
+  build_session_list "$2"
+  exit 0
+fi
+
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
 
@@ -14,18 +21,10 @@ if [ "$*" ]; then
 else
   # No argument is given. Use FZF
   SELECT_WINDOW=$(get_tmux_option "@session-wizard-windows" "off")
-  if [ "$SELECT_WINDOW" == "on" ]; then
-    RESULT=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}: #{window_name}(#{window_index})\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}")
-  else
-    RESULT=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
-  fi
-  RESULT=$( (
-    echo "$RESULT" |
-      sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
-    zoxide query -l | sed -e "$HOME_REPLACER"
-  ) | $(__fzfcmd) --reverse --print-query --tiebreak=index | tail -n 1)
+  KILL_SCRIPT='sess=$1; tmux kill-session -t "${sess%:}" 2>/dev/null'
+  KILL_BIND="ctrl-x:execute-silent(bash -c '$KILL_SCRIPT' -- {1})+reload($CURRENT_DIR/t --list-sessions $SELECT_WINDOW)"
+  RESULT=$(build_session_list "$SELECT_WINDOW" |
+    $(__fzfcmd) --reverse --print-query --tiebreak=index --bind "$KILL_BIND" --footer 'ctrl-x: kill session' | tail -n 1)
   if [ -z "$RESULT" ]; then
     exit 0
   fi
