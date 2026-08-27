@@ -1,5 +1,6 @@
 assert_tmux_running() {
-  run pgrep tmux
+  # list-sessions only succeeds against the isolated test server (TMUX_TMPDIR)
+  run tmux list-sessions
   assert_success
 }
 
@@ -14,7 +15,7 @@ assert_tmux_option_equal() {
 assert_tmux_sessions_number() {
   local expected=$1
   local actual
-  actual="$(tmux list-sessions | wc -l)"
+  actual="$(tmux list-sessions | wc -l | tr -d '[:space:]')" # BSD wc pads with spaces
   assert_equal "$actual" "$expected"
 }
 

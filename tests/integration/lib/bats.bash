@@ -1,10 +1,8 @@
 TEST_DIR="/tmp/tests"
 
+# Only ever talks to the isolated test server (TMUX_TMPDIR), never the user's.
 _stop_tmux() {
-  run pgrep tmux
-  if [ "$status" -eq 0 ]; then
-    tmux kill-server
-  fi
+  tmux kill-server 2>/dev/null || true
 }
 
 _add_tmux_plugin() {
@@ -18,17 +16,19 @@ _common_setup() {
   bats_require_minimum_version 1.5.0
   bats_load_library 'bats-support'
   bats_load_library 'bats-assert'
-  bats_load_library 'bats-file'
   # relative to the test file, not to the current directory
   load ./lib/tmux-assert
 
   DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")" >/dev/null 2>&1 && pwd)"
   PATH="$DIR/../../bin:$PATH"
 
-  if [ -n "$TMUX" ]; then
-    fail "Please run these tests outside of tmux"
-  fi
   mkdir -p "$TEST_DIR"
+  # Isolate the test tmux server from any real one: tmux puts its socket in
+  # TMUX_TMPDIR, so kill-server/list-sessions here can never touch the user's
+  # sessions. Unsetting TMUX also makes it safe to run tests from inside tmux.
+  export TMUX_TMPDIR="$TEST_DIR/tmux-socket"
+  mkdir -p "$TMUX_TMPDIR"
+  unset TMUX
   export SESSION_WIZARD_INTEGRATION_TEST=true
   _stop_tmux
   _add_tmux_plugin
