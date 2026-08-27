@@ -71,7 +71,10 @@ build_session_list() {
     list=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
   fi
+  # Numeric sort so never-attached sessions (empty/0 timestamp) sink to the
+  # bottom; LC_ALL=C because some locales collate blanks in ways that float
+  # them to the top (GNU sort). See PR #18.
   echo "$list" |
-    sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
+    LC_ALL=C sort -rn | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
   zoxide query -l | sed -e "$HOME_REPLACER"
 }
