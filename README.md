@@ -24,7 +24,7 @@ What if you could use 1 prefix key to do all of this? Read on!
 
 `prefix + T` (customisable) - displays a pop-up with [fzf](https://github.com/junegunn/fzf) which displays the existing sessions followed by recently accessed directories (using [zoxide](https://github.com/ajeetdsouza/zoxide)). Choose the session or the directory and voila! You're in that session. If the session doesn't exist, it will be created.
 
-Inside the pop-up, highlight a session and press `ctrl-x` to kill it. The list refreshes in place without closing the pop-up. (The `ctrl-x: kill session` hint line requires fzf ≥ 0.64; the binding itself works on older fzf versions.)
+Inside the pop-up, highlight a session and press `ctrl-x` to kill it. With `@session-wizard-windows on`, `ctrl-x` kills just the highlighted window (the session goes away with its last window). The list refreshes in place without closing the pop-up. (The hint line in the popup requires fzf ≥ 0.64; the binding itself works on older fzf versions.)
 
 ### Required
 

@@ -8,21 +8,33 @@ teardown() {
   _common_teardown
 }
 
-@test "t --kill-row kills the session for a picker row" {
+@test "t --kill-row off kills the session for a picker row" {
   mkdir -p "$TEST_DIR/dir1" "$TEST_DIR/dir2"
   t "$TEST_DIR/dir1"
   t "$TEST_DIR/dir2"
   assert_tmux_sessions_number 2
-  t --kill-row "dir1:"
+  t --kill-row off "dir1: 1 window(s)"
   assert_tmux_sessions_number 1
   assert_tmux_session_exists "dir2"
+}
+
+@test "t --kill-row on kills only the window, session survives" {
+  mkdir -p "$TEST_DIR/dir1"
+  t "$TEST_DIR/dir1"
+  tmux new-window -t "dir1:9" -n "second"
+  windows=$(tmux list-windows -t "dir1" | wc -l | tr -d '[:space:]')
+  assert_equal "$windows" "2"
+  t --kill-row on "dir1: second(9)"
+  windows=$(tmux list-windows -t "dir1" | wc -l | tr -d '[:space:]')
+  assert_equal "$windows" "1"
+  assert_tmux_session_exists "dir1"
 }
 
 @test "t --kill-row leaves sessions alone for a directory row" {
   mkdir -p "$TEST_DIR/dir1"
   t "$TEST_DIR/dir1"
   assert_tmux_sessions_number 1
-  t --kill-row "$TEST_DIR/dir1"
+  t --kill-row off "$TEST_DIR/dir1"
   assert_tmux_sessions_number 1
 }
 

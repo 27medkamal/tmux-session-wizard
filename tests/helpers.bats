@@ -292,25 +292,39 @@ _setup_hook_test() {
   assert_output "my-session"
 }
 
-# --- kill_session_from_row ------------------------------------------------
-@test "kill_session_from_row kills the session named in a picker row" {
+# --- kill_row ---------------------------------------------------------------
+@test "kill_row kills the session for a session row" {
   function tmux() { echo "tmux $*"; }
-  run kill_session_from_row "alpha:"
+  run kill_row "off" "alpha: 2 window(s)"
   assert_output "tmux kill-session -t alpha"
 }
 
-@test "kill_session_from_row ignores directory rows" {
+@test "kill_row kills only the window for a window row in windows mode" {
   function tmux() { echo "tmux $*"; }
-  run kill_session_from_row "/opt/tool"
-  assert_output ""
-  run kill_session_from_row "~/projects/wizard"
+  run kill_row "on" "alpha: vim(2) (attached)"
+  assert_output "tmux kill-window -t alpha:2"
+}
+
+@test "kill_row does nothing in windows mode when no window index is found" {
+  function tmux() { echo "tmux $*"; }
+  run kill_row "on" "alpha: weird row"
   assert_output ""
 }
 
-@test "kill_session_from_row escapes a session literally named ~" {
+@test "kill_row ignores directory rows" {
   function tmux() { echo "tmux $*"; }
-  run kill_session_from_row "~:"
+  run kill_row "off" "/opt/tool"
+  assert_output ""
+  run kill_row "on" "~/projects/wizard"
+  assert_output ""
+}
+
+@test "kill_row escapes a session literally named ~" {
+  function tmux() { echo "tmux $*"; }
+  run kill_row "off" "~: 1 window(s)"
   assert_output 'tmux kill-session -t \~'
+  run kill_row "on" "~: vim(3)"
+  assert_output 'tmux kill-window -t \~:3'
 }
 
 # --- preview_row ------------------------------------------------------------

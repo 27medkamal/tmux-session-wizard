@@ -162,19 +162,35 @@ build_session_list() {
   zoxide query -l | sed -e "$HOME_REPLACER"
 }
 
-# Kills the session a picker row refers to. Session/window rows have "name:"
-# as their first field; anything else (a directory row) is ignored.
-# $1: the row's first field, i.e. fzf's {1}
-kill_session_from_row() {
-  local first="$1"
+# Extracts the window index from a window row: the last all-digit
+# parenthesised group, e.g. "sess: vim(2) (attached)" -> 2. Session rows
+# ("sess: 3 window(s)") have none, so this prints nothing for them.
+_window_index_from_row() {
+  echo "$1" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p'
+}
+
+# Kills what a picker row refers to: the session for a session row, only that
+# window in windows mode (tmux removes the session when its last window
+# dies). Directory rows are ignored.
+# $1: "on" when the picker lists windows; $2: the full row, i.e. fzf's {}
+kill_row() {
+  local select_window="$1" row="$2"
+  local first="${row%% *}"
   case "$first" in
-  *:)
-    local session="${first%:}"
-    # Lone ~ would be parsed by tmux as the marked pane; escape it
-    [ "$session" = "~" ] && session='\~'
-    tmux kill-session -t "$session" 2>/dev/null
-    ;;
+  *:) ;;
+  *) return 0 ;;
   esac
+  local session="${first%:}"
+  # Lone ~ would be parsed by tmux as the marked pane; escape it
+  [ "$session" = "~" ] && session='\~'
+  if [ "$select_window" = "on" ]; then
+    local window
+    window=$(_window_index_from_row "$row")
+    [ -n "$window" ] || return 0
+    tmux kill-window -t "$session:$window" 2>/dev/null
+  else
+    tmux kill-session -t "$session" 2>/dev/null
+  fi
 }
 
 # Renders the fzf preview for a picker row: pane contents for session/window
@@ -188,7 +204,7 @@ preview_row() {
     # Lone ~ would be parsed by tmux as the marked pane; escape it
     [ "$session" = "~" ] && session='\~'
     local window target="$session"
-    window=$(echo "$row" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')
+    window=$(_window_index_from_row "$row")
     [ -n "$window" ] && target="$session:$window"
     # Captures are pane-sized, usually larger than the preview window: drop
     # the blank tail below the prompt and show the most recent lines that fit
