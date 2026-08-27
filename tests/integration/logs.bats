@@ -3,7 +3,7 @@
 setup() {
   load ./lib/bats.bash
   _common_setup
-  export SESSION_WIZARD_LOG_FILE="${TEST_DIR}/debug.log"
+  SESSION_WIZARD_LOG_FILE="${TEST_DIR}/debug.log"
   rm -rf "$SESSION_WIZARD_LOG_FILE"
 }
 
@@ -11,19 +11,18 @@ teardown() {
   _common_teardown
 }
 
-@test "No log file if @session-wizard-debug is not set" {
+@test "No log file if @session-wizard-log-file is not set" {
   t .
   assert_tmux_running
-  assert_file_not_exists "$SESSION_WIZARD_LOG_FILE"
+  [ ! -e "$SESSION_WIZARD_LOG_FILE" ]
 }
 
-@test "Create log file if @session-wizard-debug is set" {
+@test "Create log file if @session-wizard-log-file is set" {
   echo "set-option -g @session-wizard-log-file '$SESSION_WIZARD_LOG_FILE'" >>"$TEST_DIR/tmux.conf"
-  assert_file_not_exists "$SESSION_WIZARD_LOG_FILE"
+  [ ! -e "$SESSION_WIZARD_LOG_FILE" ]
   t .
   assert_tmux_running
-  assert_file_exists "$SESSION_WIZARD_LOG_FILE"
-  # Check content of logfile
+  [ -f "$SESSION_WIZARD_LOG_FILE" ]
   run cat "$SESSION_WIZARD_LOG_FILE"
-  assert_line -p "Running session-wizard plugin"
+  assert_line --partial "Running session-wizard"
 }

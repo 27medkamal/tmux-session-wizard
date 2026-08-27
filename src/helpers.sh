@@ -26,6 +26,76 @@ set_tmux_option() {
   fi
 }
 
+# Appends a timestamped line to @session-wizard-log-file, when set.
+# Needs a reachable tmux server (options live on the server); silently a no-op
+# otherwise.
+log_message() {
+  local log_file
+  log_file=$(get_tmux_option "@session-wizard-log-file")
+  if [ -z "$log_file" ]; then
+    return 0
+  fi
+  echo "$(date +"%Y-%m-%d %H:%M:%S") $1" >>"$log_file"
+}
+
+# Ensures a session named $1 exists (creating it for directory $2 when
+# needed) and echoes the final session name.
+# When @session-wizard-pre-create-session-hook is set, it runs first as:
+#   <hook> <session-name> <directory>
+# If it prints two lines, they replace the session name and directory.
+# If it exits non-zero, the wizard aborts (returns 1, no session created).
+create_session() {
+  local session="$1" dir="$2"
+  local pre_hook hook_output
+  pre_hook=$(get_tmux_option "@session-wizard-pre-create-session-hook")
+  if [ -n "$pre_hook" ]; then
+    log_message "Running pre-create-session-hook: $pre_hook"
+    # The hook command itself is expanded (it may carry its own flags), but
+    # session/dir are passed as quoted arguments and never re-parsed, so
+    # hostile directory names cannot inject shell code.
+    if ! hook_output=$(eval "$pre_hook \"\$session\" \"\$dir\""); then
+      log_message "pre-create-session-hook failed, aborting"
+      return 1
+    fi
+    if [ -n "$hook_output" ]; then
+      session=$(echo "$hook_output" | sed -n '1p')
+      dir=$(echo "$hook_output" | sed -n '2p')
+    fi
+  fi
+
+  if ! tmux has-session -t="$session" 2>/dev/null; then
+    log_message "Creating session '$session' for directory '$dir'"
+    tmux new-session -d -s "$session" -c "$dir"
+  fi
+
+  echo "$session"
+}
+
+# Attaches (outside tmux) or switches (inside tmux) to a session, optionally
+# selecting a window.
+attach_to_tmux_session() {
+  local session="$1" window="$2"
+  # Escape a lone ~, which tmux would otherwise parse as the marked pane:
+  # https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
+  session=$(echo "$session" | sed 's/^~$/\\~/')
+
+  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
+    # Test double: attaching would steal the test terminal
+    [ -n "$BATS_TEST_TMPDIR" ] && echo "$session" >"$BATS_TEST_TMPDIR/attached_session"
+    return 0
+  fi
+
+  if [ -z "$TMUX" ]; then
+    tmux attach -t "$session"
+  else
+    tmux switch-client -t "$session"
+  fi
+
+  if [ -n "$window" ]; then
+    tmux select-window -t "$session:$window"
+  fi
+}
+
 session_name() {
   if [ "$1" = "--directory" ]; then
     shift

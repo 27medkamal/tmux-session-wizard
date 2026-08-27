@@ -20,53 +20,15 @@ assert_tmux_sessions_number() {
 }
 
 assert_tmux_session_exists() {
-  # Based on existing implementation of bat's asserts
-  local -i is_match_line=0
-  local -i is_mode_partial=0
-  local -i is_mode_regexp=0
-
-  while (($# > 0)); do
-    case "$1" in
-    -p | --partial)
-      is_mode_partial=1
-      shift
-      ;;
-    -e | --regexp)
-      is_mode_regexp=1
-      shift
-      ;;
-    -n | --index)
-      is_match_line=1
-      local -ri idx="$2"
-      shift 2
-      ;;
-    *) break ;;
-    esac
-  done
-
-  local expected=${1}
+  local session_name=$1
   run tmux list-sessions -F "#{session_name}"
-
-  if ((is_match_line)); then
-    if ((is_mode_partial)); then
-      assert_line --index "$idx" --partial "$expected"
-    elif ((is_mode_regexp)); then
-      assert_line --index "$idx" --regexp "$expected"
-    else
-      assert_line --index "$idx" "$expected"
-    fi
-  else
-    if ((is_mode_partial)); then
-      assert_line --partial "$expected"
-    elif ((is_mode_regexp)); then
-      assert_line --regexp "$expected"
-    else
-      assert_line "$expected"
-    fi
-  fi
+  assert_line "$session_name"
 }
 
+# bin/t under SESSION_WIZARD_INTEGRATION_TEST records the session it would
+# have attached to instead of attaching (which would steal the terminal).
 assert_tmux_session_attached() {
   local expected=$1
   assert_equal "$(cat "$BATS_TEST_TMPDIR/attached_session")" "$expected"
 }
+  

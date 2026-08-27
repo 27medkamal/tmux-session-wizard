@@ -8,7 +8,7 @@ teardown() {
   _common_teardown
 }
 
-@test "pre-create-session-hook modifies session name" {
+@test "pre-create-session-hook modifies the session name" {
   local hook_script="$TEST_DIR/hook.sh"
   cat >"$hook_script" <<'HOOK'
 #!/bin/bash
@@ -24,7 +24,7 @@ HOOK
   assert_tmux_session_exists "custom-session"
 }
 
-@test "pre-create-session-hook modifies target directory" {
+@test "pre-create-session-hook modifies the target directory" {
   local alt_dir="$TEST_DIR/alt-dir"
   mkdir -p "$alt_dir"
   mkdir -p "$TEST_DIR/dir"
@@ -42,7 +42,7 @@ HOOK
   assert_tmux_session_attached "dir"
   assert_tmux_sessions_number 1
   local session_dir
-  session_dir=$(tmux display-message -t "dir" -p "#{pane_current_path}")
+  session_dir=$(tmux display-message -t "dir" -p "#{session_path}")
   assert_equal "$session_dir" "$alt_dir"
 }
 
@@ -61,3 +61,19 @@ HOOK
   assert_tmux_session_exists "dir"
 }
 
+@test "failing pre-create-session-hook aborts: no session created, nothing attached" {
+  local hook_script="$TEST_DIR/hook.sh"
+  cat >"$hook_script" <<'HOOK'
+#!/bin/bash
+exit 1
+HOOK
+  chmod +x "$hook_script"
+  echo "set -g @session-wizard-pre-create-session-hook '$hook_script'" >>"$TMUX_CONFIG"
+
+  mkdir -p "$TEST_DIR/dir"
+  run t "$TEST_DIR/dir"
+  assert_failure
+  [ ! -e "$BATS_TEST_TMPDIR/attached_session" ]
+  run tmux has-session -t "dir"
+  assert_failure
+}

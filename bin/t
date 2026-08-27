@@ -46,10 +46,20 @@ else
   fi
 fi
 
-# Makes sure tmux is running in order to get all the correct tmux options below. Gets cleaned at the bottom
+# Makes sure tmux is running in order to get all the correct tmux options below
+cleanup_tmp_session() {
+  if [[ -n "$TMP_SESSION_NAME" ]]; then
+    tmux kill-session -t "$TMP_SESSION_NAME" 2>/dev/null
+    rm -rf "$TMP_SESSION_DIR"
+    TMP_SESSION_NAME=""
+  fi
+}
 if ! tmux info &>/dev/null; then
   TMP_SESSION_DIR=$(mktemp -d)
   TMP_SESSION_NAME=$(session_name --full-path "$TMP_SESSION_DIR")
+  # The trap covers every exit path (missing directory, aborting hook, ...);
+  # the happy path still cleans up explicitly before attaching.
+  trap cleanup_tmp_session EXIT
   # Allow for custom tmux config (mostly for testing)
   if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
     tmux -f "$TMUX_CONFIG" new-session -d -s "$TMP_SESSION_NAME" -c "$TMP_SESSION_DIR"
@@ -58,6 +68,8 @@ if ! tmux info &>/dev/null; then
   fi
 
 fi
+
+log_message "Running session-wizard"
 
 # Get or create session
 if [[ $RESULT == *":"* ]]; then
@@ -84,31 +96,13 @@ else
   MODE=$(get_tmux_option "@session-wizard-mode" "directory")
   SESSION=$(session_name --"$MODE" "$DIR_WITH_TILDE")
 
-  if ! tmux has-session -t="$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "$SESSION" -c "$DIR_FULL"
+  if ! SESSION=$(create_session "$SESSION" "$DIR_FULL"); then
+    # pre-create-session-hook asked to abort
+    exit 1
   fi
 fi
 
-# Clean up tmp session
-if [[ -n "$TMP_SESSION_NAME" ]]; then
-  tmux kill-session -t "$TMP_SESSION_NAME" 2>/dev/null
-  rm -rf "$TMP_SESSION_DIR"
-fi
+# Clean up tmp session before attaching (attach can block until detach)
+cleanup_tmp_session
 
-# Attach to session
-# Escape tilde which if it appears by itself, tmux will interpret as a marked target
-# https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
-SESSION=$(echo "$SESSION" | sed 's/^~$/\\~/')
-if [ -z "$TMUX" ]; then
-  if [ -n "$SESSION_WIZARD_INTEGRATION_TEST" ]; then
-    echo "Running integrtion test, so not attaching to tmux session"
-  else
-    tmux attach -t "$SESSION"
-  fi
-else
-  tmux switch-client -t "$SESSION"
-fi
-
-if [ -n "$WINDOW" ]; then
-  tmux select-window -t "$SESSION:$WINDOW"
-fi
+attach_to_tmux_session "$SESSION" "$WINDOW"

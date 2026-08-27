@@ -1,4 +1,7 @@
 # bats file_tags=unit
+SESSION_EXISTS=0
+SESSION_NOT_EXISTS=1
+
 setup() {
   bats_load_library 'bats-support'
   bats_load_library 'bats-assert'
@@ -45,6 +48,158 @@ teardown() {
   }
   run get_tmux_option "moo-foo-bar" "bar"
   assert_output "foo"
+}
+
+# --- create_session ---------------------------------------------------------
+@test "create_session creates a new tmux session and echoes its name" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session | show-option) ;;
+    esac
+  }
+  run create_session "my-session" "/tmp/my-dir"
+  assert_success
+  assert_output "my-session"
+}
+
+@test "create_session does not create a session that already exists" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_EXISTS" ;;
+    new-session)
+      echo "new-session should not be called" >&2
+      return 1
+      ;;
+    show-option) ;;
+    esac
+  }
+  run create_session "existing-session" "/tmp/dir"
+  assert_success
+  assert_output "existing-session"
+}
+
+# Shared stub for the hook tests: hook is configured, captures new-session args
+_setup_hook_test() {
+  local has_session_result="$1"
+  NEW_SESSION_ARGS_FILE="$BATS_TEST_TMPDIR/new_session_args"
+  function tmux() {
+    case "$1" in
+    has-session) return "$HAS_SESSION_RESULT" ;;
+    new-session)
+      echo "$4" >"$NEW_SESSION_ARGS_FILE"
+      echo "$6" >>"$NEW_SESSION_ARGS_FILE"
+      ;;
+    show-option)
+      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
+        echo "my_hook"
+      fi
+      ;;
+    esac
+  }
+  function my_hook() {
+    echo "modified-session"
+    echo "/modified/dir"
+  }
+  export HAS_SESSION_RESULT="$has_session_result"
+  export NEW_SESSION_ARGS_FILE
+}
+
+@test "create_session runs pre-create-session-hook and uses its output" {
+  _setup_hook_test "$SESSION_NOT_EXISTS"
+  run create_session "original-session" "/original/dir"
+  assert_success
+  assert_output "modified-session"
+  assert_equal "$(sed -n '1p' "$NEW_SESSION_ARGS_FILE")" "modified-session"
+  assert_equal "$(sed -n '2p' "$NEW_SESSION_ARGS_FILE")" "/modified/dir"
+}
+
+@test "create_session keeps original values when hook outputs nothing" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session) echo "new-session:$4:$6" ;;
+    show-option)
+      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
+        echo "silent_hook"
+      fi
+      ;;
+    esac
+  }
+  function silent_hook() { :; }
+  run create_session "my-session" "/my/dir"
+  assert_line --index 0 "new-session:my-session:/my/dir"
+  assert_line --index 1 "my-session"
+}
+
+@test "create_session passes session and dir to the hook as arguments" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session) ;;
+    show-option)
+      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
+        echo "arg_check_hook"
+      fi
+      ;;
+    esac
+  }
+  function arg_check_hook() {
+    echo "$1" >"$HOOK_ARGS_FILE"
+    echo "$2" >>"$HOOK_ARGS_FILE"
+  }
+  export HOOK_ARGS_FILE="$BATS_TEST_TMPDIR/hook_args"
+  run create_session "test-session" "/test/dir"
+  assert_equal "$(sed -n '1p' "$HOOK_ARGS_FILE")" "test-session"
+  assert_equal "$(sed -n '2p' "$HOOK_ARGS_FILE")" "/test/dir"
+}
+
+@test "create_session does not shell-parse hostile session/dir values" {
+  # A directory named '$(touch pwned)' etc. must reach the hook verbatim and
+  # must never be executed.
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session) ;;
+    show-option)
+      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
+        echo "arg_check_hook"
+      fi
+      ;;
+    esac
+  }
+  function arg_check_hook() {
+    echo "$1" >"$HOOK_ARGS_FILE"
+    echo "$2" >>"$HOOK_ARGS_FILE"
+  }
+  export HOOK_ARGS_FILE="$BATS_TEST_TMPDIR/hook_args"
+  run create_session 'evil; echo injected' '/tmp/$(touch "$BATS_TEST_TMPDIR/pwned")'
+  assert_success
+  # the final session name is echoed back verbatim, never executed
+  assert_output 'evil; echo injected'
+  assert_equal "$(sed -n '1p' "$HOOK_ARGS_FILE")" 'evil; echo injected'
+  assert_equal "$(sed -n '2p' "$HOOK_ARGS_FILE")" '/tmp/$(touch "$BATS_TEST_TMPDIR/pwned")'
+  [ ! -e "$BATS_TEST_TMPDIR/pwned" ]
+}
+
+@test "create_session aborts when the hook fails" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session)
+      echo "new-session should not be called" >&2
+      return 1
+      ;;
+    show-option)
+      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
+        echo "failing_hook"
+      fi
+      ;;
+    esac
+  }
+  function failing_hook() { return 1; }
+  run create_session "my-session" "/my/dir"
+  assert_failure
 }
 
 # --- kill_session_from_row ------------------------------------------------
