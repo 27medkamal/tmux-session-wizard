@@ -26,6 +26,15 @@ teardown() {
   assert_tmux_sessions_number 1
 }
 
+@test "t --list-sessions on lists window rows (kill-reload in windows mode)" {
+  mkdir -p "$TEST_DIR/dir1"
+  t "$TEST_DIR/dir1"
+  tmux new-window -t "dir1" -n "second"
+  run t --list-sessions on
+  assert_line --partial "dir1: "
+  assert_line --partial "second("
+}
+
 @test "t --list-sessions prints picker rows for existing sessions" {
   mkdir -p "$TEST_DIR/dir1"
   t "$TEST_DIR/dir1"

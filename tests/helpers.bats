@@ -202,6 +202,30 @@ _setup_hook_test() {
   assert_failure
 }
 
+@test "post-create-session-hook receives the values the pre-hook modified" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session) ;;
+    show-option)
+      case "$3" in
+      "@session-wizard-pre-create-session-hook") echo "pre_mod_hook" ;;
+      "@session-wizard-post-create-session-hook") echo "post_capture_hook" ;;
+      esac
+      ;;
+    esac
+  }
+  function pre_mod_hook() {
+    echo "renamed"
+    echo "/re/dir"
+  }
+  function post_capture_hook() { echo "$1:$2" >"$POST_ARGS_FILE"; }
+  export POST_ARGS_FILE="$BATS_TEST_TMPDIR/post_args"
+  run create_session "orig" "/orig/dir"
+  assert_output "renamed"
+  assert_equal "$(cat "$POST_ARGS_FILE")" "renamed:/re/dir"
+}
+
 @test "create_session runs post-create-session-hook after creating a session" {
   function tmux() {
     case "$1" in
