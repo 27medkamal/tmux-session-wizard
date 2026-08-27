@@ -302,6 +302,19 @@ _setup_hook_test() {
   assert_output "tmux capture-pane -ep -t alpha:2"
 }
 
+@test "preview_row shows the most recent pane lines that fit the preview window" {
+  # Captures are pane-sized; the preview must show the tail (where the prompt
+  # is), not the top, and drop the blank rows below the last output line.
+  function tmux() {
+    printf 'line1\nline2\nline3\nline4\n\n\n'
+  }
+  export FZF_PREVIEW_LINES=2
+  run preview_row "alpha: 1 window(s)"
+  assert_line --index 0 "line3"
+  assert_line --index 1 "line4"
+  assert_equal "${#lines[@]}" 2
+}
+
 @test "preview_row escapes a session literally named ~" {
   function tmux() { echo "tmux $*"; }
   run preview_row "~: 1 window(s)"

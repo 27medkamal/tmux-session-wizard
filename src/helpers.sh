@@ -190,7 +190,12 @@ preview_row() {
     local window target="$session"
     window=$(echo "$row" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')
     [ -n "$window" ] && target="$session:$window"
-    tmux capture-pane -ep -t "$target" 2>/dev/null
+    # Captures are pane-sized, usually larger than the preview window: drop
+    # the blank tail below the prompt and show the most recent lines that fit
+    # (fzf exports FZF_PREVIEW_LINES to preview commands).
+    tmux capture-pane -ep -t "$target" 2>/dev/null |
+      awk 'NF { last = NR } { lines[NR] = $0 } END { for (i = 1; i <= last; i++) print lines[i] }' |
+      tail -n "${FZF_PREVIEW_LINES:-40}"
   else
     local dir="${row/#\~/$HOME}"
     if command -v eza >/dev/null 2>&1; then
