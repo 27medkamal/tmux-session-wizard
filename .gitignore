@@ -1,6 +1,5 @@
 # IDE
 .idea
-.worktrees
 
 # Nix
 .envrc
