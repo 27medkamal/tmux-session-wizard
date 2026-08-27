@@ -68,6 +68,31 @@ teardown() {
   assert_output 'tmux kill-session -t \~'
 }
 
+# --- preview_row ------------------------------------------------------------
+@test "preview_row shows pane contents for a session row" {
+  function tmux() { echo "tmux $*"; }
+  run preview_row "alpha: 3 window(s) (attached)"
+  assert_output "tmux capture-pane -ep -t alpha"
+}
+
+@test "preview_row targets the window for a window row" {
+  function tmux() { echo "tmux $*"; }
+  run preview_row "alpha: vim(2) (attached)"
+  assert_output "tmux capture-pane -ep -t alpha:2"
+}
+
+@test "preview_row escapes a session literally named ~" {
+  function tmux() { echo "tmux $*"; }
+  run preview_row "~: 1 window(s)"
+  assert_output 'tmux capture-pane -ep -t \~'
+}
+
+@test "preview_row lists a directory row, expanding ~" {
+  function eza() { echo "eza $*"; }
+  run preview_row "~/projects/wizard"
+  assert_output "eza --tree --level=1 --color=always $HOME/projects/wizard"
+}
+
 # --- __fzf_version_at_least -----------------------------------------------
 @test "__fzf_version_at_least compares fzf versions" {
   function fzf() { echo "0.73.1 (ce4bef75)"; }

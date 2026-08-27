@@ -17,6 +17,10 @@ case "$1" in
   kill_session_from_row "$2"
   exit 0
   ;;
+--preview-row)
+  preview_row "$2"
+  exit 0
+  ;;
 esac
 
 # Parse optional argument
@@ -31,6 +35,9 @@ else
   FZF_ARGS+=(--bind "ctrl-x:execute-silent(\"$CURRENT_DIR/t\" --kill-row {1})+reload(\"$CURRENT_DIR/t\" --list-sessions $SELECT_WINDOW)")
   if __fzf_version_at_least 0 64; then
     FZF_ARGS+=(--footer "ctrl-x: kill session")
+  fi
+  if [ "$(get_tmux_option "@session-wizard-preview" "off")" == "on" ]; then
+    FZF_ARGS+=(--preview "\"$CURRENT_DIR/t\" --preview-row {}")
   fi
   RESULT=$(build_session_list "$SELECT_WINDOW" |
     $(__fzfcmd) "${FZF_ARGS[@]}" | tail -n 1)

@@ -94,6 +94,30 @@ kill_session_from_row() {
   esac
 }
 
+# Renders the fzf preview for a picker row: pane contents for session/window
+# rows, a directory listing (eza when available, ls otherwise) for directory
+# rows.
+# $1: the full row, i.e. fzf's {}
+preview_row() {
+  local row="$1"
+  if [[ "$row" == *:* ]]; then
+    local session="${row%%:*}"
+    # Lone ~ would be parsed by tmux as the marked pane; escape it
+    [ "$session" = "~" ] && session='\~'
+    local window target="$session"
+    window=$(echo "$row" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')
+    [ -n "$window" ] && target="$session:$window"
+    tmux capture-pane -ep -t "$target" 2>/dev/null
+  else
+    local dir="${row/#\~/$HOME}"
+    if command -v eza >/dev/null 2>&1; then
+      eza --tree --level=1 --color=always "$dir"
+    else
+      ls -A "$dir"
+    fi
+  fi
+}
+
 # Succeeds when the fzf on PATH is at least version $1.$2
 __fzf_version_at_least() {
   local want_major="$1" want_minor="$2" version major minor
