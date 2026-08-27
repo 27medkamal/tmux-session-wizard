@@ -61,6 +61,42 @@ HOOK
   assert_tmux_session_exists "dir"
 }
 
+@test "post-create-session-hook runs on creation only, not on reuse" {
+  local hook_script="$TEST_DIR/post-hook.sh"
+  cat >"$hook_script" <<'HOOK'
+#!/bin/bash
+tmux new-window -t "$1" -n scratch
+HOOK
+  chmod +x "$hook_script"
+  echo "set -g @session-wizard-post-create-session-hook '$hook_script'" >>"$TMUX_CONFIG"
+
+  mkdir -p "$TEST_DIR/dir"
+  t "$TEST_DIR/dir"
+  assert_tmux_session_attached "dir"
+  run tmux list-windows -t "dir" -F "#{window_name}"
+  assert_line "scratch"
+  # Second run reuses the session: the hook must not add another window
+  t "$TEST_DIR/dir"
+  windows=$(tmux list-windows -t "dir" | wc -l | tr -d '[:space:]')
+  assert_equal "$windows" "2"
+}
+
+@test "failing post-create-session-hook still creates and attaches" {
+  local hook_script="$TEST_DIR/post-hook.sh"
+  cat >"$hook_script" <<'HOOK'
+#!/bin/bash
+exit 1
+HOOK
+  chmod +x "$hook_script"
+  echo "set -g @session-wizard-post-create-session-hook '$hook_script'" >>"$TMUX_CONFIG"
+
+  mkdir -p "$TEST_DIR/dir"
+  run t "$TEST_DIR/dir"
+  assert_success
+  assert_tmux_session_attached "dir"
+  assert_tmux_session_exists "dir"
+}
+
 @test "failing pre-create-session-hook aborts: no session created, nothing attached" {
   local hook_script="$TEST_DIR/hook.sh"
   cat >"$hook_script" <<'HOOK'

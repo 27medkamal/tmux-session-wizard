@@ -153,7 +153,8 @@ flowchart LR
     A[Resolve path] --> B[Generate session name]
     B --> C[pre-create-session-hook]
     C --> D[Create session if needed]
-    D --> E[Attach to session]
+    D --> P[post-create-session-hook]
+    P --> E[Attach to session]
 ```
 
 #### pre-create-session-hook
@@ -187,6 +188,22 @@ echo "$2"
 ```
 
 A more complete example is in [`examples/resolve-session-conflict-hook.sh`](examples/resolve-session-conflict-hook.sh). It handles two different directories generating the same session name (e.g. two projects both called `api`): when a conflict is detected it prompts for a new name via fzf and remembers the choice for the rest of the boot.
+
+#### post-create-session-hook
+
+Runs only when the wizard actually creates a new session (never when an existing one is reused), right after creation and before attaching — ideal for building a project layout. Invoked as:
+
+```
+<your-hook> <session-name> <target-directory>
+```
+
+Output is discarded, and a failing hook is logged but does not abort (you still land in the session).
+
+```tmux
+set -g @session-wizard-post-create-session-hook '/path/to/hook-script.sh'
+```
+
+See [`examples/project-layout-hook.sh`](examples/project-layout-hook.sh) for a hook that sets up editor/shell/git windows for every new session.
 
 #### Debug logging
 

@@ -202,6 +202,72 @@ _setup_hook_test() {
   assert_failure
 }
 
+@test "create_session runs post-create-session-hook after creating a session" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session) echo "created" >>"$CALL_ORDER_FILE" ;;
+    show-option)
+      if [ "$3" = "@session-wizard-post-create-session-hook" ]; then
+        echo "post_hook"
+      fi
+      ;;
+    esac
+  }
+  function post_hook() {
+    echo "post:$1:$2" >>"$CALL_ORDER_FILE"
+  }
+  export CALL_ORDER_FILE="$BATS_TEST_TMPDIR/call_order"
+  run create_session "my-session" "/my/dir"
+  assert_success
+  assert_output "my-session"
+  assert_equal "$(sed -n '1p' "$CALL_ORDER_FILE")" "created"
+  assert_equal "$(sed -n '2p' "$CALL_ORDER_FILE")" "post:my-session:/my/dir"
+}
+
+@test "create_session does not run post-create-session-hook when session is reused" {
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_EXISTS" ;;
+    show-option)
+      if [ "$3" = "@session-wizard-post-create-session-hook" ]; then
+        echo "post_hook"
+      fi
+      ;;
+    esac
+  }
+  function post_hook() {
+    touch "$BATS_TEST_TMPDIR/post_ran"
+  }
+  run create_session "existing-session" "/my/dir"
+  assert_success
+  assert_output "existing-session"
+  [ ! -e "$BATS_TEST_TMPDIR/post_ran" ]
+}
+
+@test "create_session continues when post-create-session-hook fails or prints" {
+  # The session already exists at that point; its stdout must not leak into
+  # the echoed session name, and a failure must not abort the attach.
+  function tmux() {
+    case "$1" in
+    has-session) return "$SESSION_NOT_EXISTS" ;;
+    new-session) ;;
+    show-option)
+      if [ "$3" = "@session-wizard-post-create-session-hook" ]; then
+        echo "noisy_failing_post_hook"
+      fi
+      ;;
+    esac
+  }
+  function noisy_failing_post_hook() {
+    echo "layout noise"
+    return 1
+  }
+  run create_session "my-session" "/my/dir"
+  assert_success
+  assert_output "my-session"
+}
+
 # --- kill_session_from_row ------------------------------------------------
 @test "kill_session_from_row kills the session named in a picker row" {
   function tmux() { echo "tmux $*"; }

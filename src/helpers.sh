@@ -66,6 +66,19 @@ create_session() {
   if ! tmux has-session -t="$session" 2>/dev/null; then
     log_message "Creating session '$session' for directory '$dir'"
     tmux new-session -d -s "$session" -c "$dir"
+
+    # Runs only when a session was actually created (e.g. to build a project
+    # layout), as: <hook> <session-name> <directory>. Output is discarded and
+    # a failure is logged but does not abort: the session already exists and
+    # the user should still land in it.
+    local post_hook
+    post_hook=$(get_tmux_option "@session-wizard-post-create-session-hook")
+    if [ -n "$post_hook" ]; then
+      log_message "Running post-create-session-hook: $post_hook"
+      if ! eval "$post_hook \"\$session\" \"\$dir\"" >/dev/null 2>&1; then
+        log_message "post-create-session-hook failed (continuing)"
+      fi
+    fi
   fi
 
   echo "$session"
