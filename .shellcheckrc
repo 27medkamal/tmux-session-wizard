@@ -1,2 +1,3 @@
 shell=bash
-disable=SC2329,SC3043
+# SC2034: HOME_REPLACER/TILDE_REPLACER are defined in helpers.sh for use by sourcing scripts
+disable=SC2034

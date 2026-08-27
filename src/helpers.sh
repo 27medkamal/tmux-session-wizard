@@ -107,7 +107,7 @@ log_message() {
 
 HOME_REPLACER=""                                          # default to a noop
 TILDE_REPLACER=""                                         # default to a noop
-echo "$HOME" | grep -E "^[a-zA-Z0-9\-_/.@]+$" &>/dev/null # chars safe to use in sed
+echo "$HOME" | grep -E "^[a-zA-Z0-9_/.@-]+$" >/dev/null 2>&1 # chars safe to use in sed (dash last: BSD grep rejects escaped dash mid-bracket)
 HOME_SED_SAFE=$?
 if [ $HOME_SED_SAFE -eq 0 ]; then # $HOME should be safe to use in sed
   HOME_REPLACER="s|^$HOME|~|"

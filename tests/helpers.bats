@@ -15,6 +15,18 @@ teardown() {
   unset TEST_PATH
 }
 
+@test "HOME_REPLACER is active for a typical HOME path (regression: BSD grep bracket range)" {
+  # On macOS' stock grep, the old pattern [a-zA-Z0-9\-_/.@] exited 2 ("invalid
+  # character range"), silently disabling ~ substitution for every user.
+  run env HOME="/Users/some-user_1.name@x" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; echo "$HOME_REPLACER"'
+  assert_output 's|^/Users/some-user_1.name@x|~|'
+}
+
+@test "TILDE_REPLACER expands ~ back to HOME" {
+  run env HOME="/Users/some-user" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; echo "~/foo/bar" | sed -e "$TILDE_REPLACER"'
+  assert_output "/Users/some-user/foo/bar"
+}
+
 # TODO: use better stubbing for tmux (tmux show-option)
 @test "get tmux option with default value" {
   # stub tmux
