@@ -73,6 +73,15 @@ verify_session_name() {
   done
 }
 
+@test "Unresolvable path exits clean and leaves no bootstrap session behind" {
+  # Regression: this path used to leak the temp bootstrap session (and its
+  # mktemp dir) when no tmux server was running yet.
+  run t /no/such/dir-ever
+  assert_success
+  run tmux list-sessions
+  assert_failure # no server at all: the bootstrap session was cleaned up
+}
+
 @test "Run session-wizard twice with the same directory should create ONLY one session" {
   mkdir -p "$TEST_DIR/dir"
   t "$TEST_DIR/dir"
