@@ -6,8 +6,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         devPackages = [
-          (pkgs.bats.withLibraries
-            (p: [ p.bats-support p.bats-assert p.bats-file ]))
+          (pkgs.bats.withLibraries (p: [ p.bats-support p.bats-assert ]))
           pkgs.watchexec
         ];
 
@@ -17,15 +16,14 @@
           version = "unstable";
           src = self;
           nativeBuildInputs = [ pkgs.makeWrapper ];
-          postInstall = # bash
-            ''
-              substituteInPlace $target/session-wizard.tmux --replace  \$CURRENT_DIR $target
-              wrapProgram $target/bin/t \
-                --prefix PATH : ${
-                  with pkgs;
-                  lib.makeBinPath ([ fzf zoxide coreutils gnugrep gnused ])
-                }
-            '';
+          postInstall = /* bash */''
+            substituteInPlace $target/session-wizard.tmux --replace  \$CURRENT_DIR $target
+            wrapProgram $target/bin/t \
+              --prefix PATH : ${
+                with pkgs;
+                lib.makeBinPath ([ fzf zoxide coreutils gnugrep gnused ])
+              }
+          '';
         };
       in {
         packages.default = plugin;
