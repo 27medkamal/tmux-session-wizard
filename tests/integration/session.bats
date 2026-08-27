@@ -18,10 +18,11 @@ verify_session_name() {
   local expected_session_name="$2"
   mkdir -p "$dir"
   # Run session-wizard
-  t "$dir"
+  run t "$dir"
+  assert_tmux_session_attached "$expected_session_name"
   # Check if session was created with expected name
   assert_tmux_sessions_number 1
-  assert_tmux_session_exists "$expected_session_name"
+  assert_tmux_session_exists --index 0 "$expected_session_name"
   # Cleanup
   _stop_tmux
 }
@@ -72,14 +73,14 @@ verify_session_name() {
   done
 }
 
-@test "Run session-wizzard twice with the same directory should create ONLY one session" {
+@test "Run session-wizard twice with the same directory should create ONLY one session" {
   mkdir -p "$TEST_DIR/dir"
   t "$TEST_DIR/dir"
   assert_tmux_sessions_number 1
   t "$TEST_DIR/dir"
   assert_tmux_sessions_number 1
 }
-@test "Run session-wizzard twice with different directory should create two sessions" {
+@test "Run session-wizard twice with different directory should create two sessions" {
   mkdir -p "$TEST_DIR/dir1"
   mkdir -p "$TEST_DIR/dir2"
   t "$TEST_DIR/dir1"

@@ -25,7 +25,7 @@ teardown() {
   # Checking default option for plugin
   option=$(tmux show-option -gqv @session-wizard-width)
   assert_equal "$option" "80"
-  # Checking  new binding for plugin
+  # Checking new binding for plugin
   option=$(tmux show-option -gqv @session-wizard)
   assert_equal "$option" "t"
 }

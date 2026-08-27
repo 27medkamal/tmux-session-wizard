@@ -18,6 +18,7 @@ _common_setup() {
   bats_require_minimum_version 1.5.0
   bats_load_library 'bats-support'
   bats_load_library 'bats-assert'
+  bats_load_library 'bats-file'
   # relative to the test file, not to the current directory
   load ./lib/tmux-assert
 
@@ -25,7 +26,7 @@ _common_setup() {
   PATH="$DIR/../../bin:$PATH"
 
   if [ -n "$TMUX" ]; then
-    fail "Plase run these tests outisde of tmux"
+    fail "Please run these tests outside of tmux"
   fi
   mkdir -p "$TEST_DIR"
   export SESSION_WIZARD_INTEGRATION_TEST=true

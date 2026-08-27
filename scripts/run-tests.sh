@@ -27,7 +27,7 @@ while getopts "crwhui" opt; do
     echo "Usage: run-tests.sh"
     echo "Run tests for the project"
     echo "  -c  Run tests inside a container (image: ${IMAGE})"
-    echo "  -r  Rebuild the container image before running tests, set also -c opiton by default"
+    echo "  -r  Rebuild the container image before running tests, set also -c option by default"
     echo "  -w  Watch changes in project and then run tests"
     echo "  -u  Run only unit tests"
     echo "  -i  Run only integration tests"
