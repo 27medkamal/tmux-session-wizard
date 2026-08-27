@@ -26,50 +26,42 @@ verify_session_name() {
   _stop_tmux
 }
 
+# Test data is expected_session_name|directory pairs (macOS ships bash 3.2,
+# which has no associative arrays).
 @test "Session name for 'directory' mode should be normalized directory name" {
-  declare -A test_data
-  test_data=(
-    ["dir"]="$TEST_DIR/dir"
-    ["dir-2"]="$TEST_DIR/dir.2"
-    ["dir_3"]="$TEST_DIR/DIR_3"
-  )
-
-  for expected_session_name in "${!test_data[@]}"; do
-    dir="${test_data[${expected_session_name}]}"
+  while IFS='|' read -r expected_session_name dir; do
     verify_session_name "$dir" "$expected_session_name"
-  done
+  done <<EOF
+dir|$TEST_DIR/dir
+dir-2|$TEST_DIR/dir.2
+dir_3|$TEST_DIR/DIR_3
+EOF
 }
 
 @test "Session name for 'full-path' mode should be normalized full path" {
-  declare -A test_data
-  test_data=(
-    ["$TEST_DIR/dir"]="$TEST_DIR/dir"
-    ["$TEST_DIR/dir-2"]="$TEST_DIR/dir.2"
-    ["$TEST_DIR/dir_3"]="$TEST_DIR/DIR_3"
-  )
   echo "set -g @session-wizard-mode 'full-path'" >>"$TMUX_CONFIG"
   HOME="/tmp/home"
 
-  for expected_session_name in "${!test_data[@]}"; do
-    dir="${test_data[${expected_session_name}]}"
+  while IFS='|' read -r expected_session_name dir; do
     verify_session_name "$dir" "$expected_session_name"
-  done
+  done <<EOF
+$TEST_DIR/dir|$TEST_DIR/dir
+$TEST_DIR/dir-2|$TEST_DIR/dir.2
+$TEST_DIR/dir_3|$TEST_DIR/DIR_3
+EOF
 }
 
 @test "Session name for 'short-path' mode should be normalized short path" {
-  declare -A test_data
-  test_data=(
-    ["/tm/te/dir"]="/tmp/tests/dir"
-    ["/tm/te/dir-2"]="/tmp/tests/dir.2"
-    ["/tm/te/-h/dir_3"]="/tmp/tests/.hidden/DIR_3"
-  )
   echo "set -g @session-wizard-mode 'short-path'" >>"$TMUX_CONFIG"
   HOME="/tmp/home"
 
-  for expected_session_name in "${!test_data[@]}"; do
-    dir="${test_data[${expected_session_name}]}"
+  while IFS='|' read -r expected_session_name dir; do
     verify_session_name "$dir" "$expected_session_name"
-  done
+  done <<EOF
+/tm/te/dir|/tmp/tests/dir
+/tm/te/dir-2|/tmp/tests/dir.2
+/tm/te/-h/dir_3|/tmp/tests/.hidden/DIR_3
+EOF
 }
 
 @test "Unresolvable path exits clean and leaves no bootstrap session behind" {
