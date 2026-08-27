@@ -1,34 +1,25 @@
-# syntax = docker/dockerfile:1.4
-FROM nixos/nix:2.22.0 AS builder
+FROM alpine:3.22
 
-WORKDIR /tmp/build
-RUN mkdir /tmp/nix-store-closure
-COPY . .
+# Runtime + test dependencies. GNU coreutils/grep/sed over busybox for parity
+# with common Linux setups (helpers.sh uses sed -r, sort -rn, grep -E).
+RUN apk add --no-cache \
+  bash \
+  coreutils \
+  fzf \
+  gawk \
+  git \
+  grep \
+  ncurses \
+  sed \
+  tmux \
+  zoxide
 
-RUN \
-  --mount=type=cache,target=/nix,from=nixos/nix:2.22.0,source=/nix \
-  --mount=type=cache,target=/root/.cache \
-  --mount=type=bind,target=/tmp/build \
-  <<EOF
-  nix \
-    --extra-experimental-features "nix-command flakes" \
-    --option filter-syscalls false \
-    --show-trace \
-    --log-format raw \
-    build .#dev --out-link /tmp/output/result
-  cp -R $(nix-store -qR /tmp/output/result) /tmp/nix-store-closure
-EOF
+# bats + helper libraries, pinned
+RUN git clone --depth 1 --branch v1.12.0 https://github.com/bats-core/bats-core /opt/bats \
+  && git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-support /opt/bats-libs/bats-support \
+  && git clone --depth 1 --branch v2.1.0 https://github.com/bats-core/bats-assert /opt/bats-libs/bats-assert \
+  && ln -s /opt/bats/bin/bats /usr/local/bin/bats
 
-
-FROM scratch
+ENV BATS_LIB_PATH=/opt/bats-libs
 
 WORKDIR /workspace
-
-COPY --from=builder /tmp/nix-store-closure /nix/store
-COPY --from=builder /tmp/output/ /workspace/
-ENV PATH=/workspace/result/bin:$PATH
-RUN ["ln","-s", "/workspace/result/bin", "/bin"]
-RUN ["mkdir","-p", "/usr/bin"]
-RUN ["ln","-s", "/workspace/result/bin/env", "/usr/bin/env"]
-# For bats
-RUN ["mkdir","--mode", "1777", "/tmp"]
