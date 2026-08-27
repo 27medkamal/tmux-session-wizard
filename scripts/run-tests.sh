@@ -4,7 +4,7 @@
 
 PROJECT_ROOT="$(dirname "$(dirname "$(realpath "$0")")")"
 IMAGE="tmux-session-wizard:dev"
-FILTER=""
+FILTER=()
 
 while getopts "crwhui" opt; do
   case $opt in
@@ -18,10 +18,10 @@ while getopts "crwhui" opt; do
     WATCH=true
     ;;
   u)
-    FILTER="$FILTER --filter-tags unit"
+    FILTER+=(--filter-tags unit)
     ;;
   i)
-    FILTER="$FILTER --filter-tags integration"
+    FILTER+=(--filter-tags integration)
     ;;
   h)
     echo "Usage: run-tests.sh"
@@ -42,7 +42,7 @@ while getopts "crwhui" opt; do
 done
 
 # Basic command to run tests
-CMD=(bats $FILTER --recursive "$PROJECT_ROOT/tests")
+CMD=(bats "${FILTER[@]}" --recursive "$PROJECT_ROOT/tests")
 
 # Run tests in watch mode
 if [ "$WATCH" = true ]; then
@@ -60,7 +60,7 @@ if [ -z "$IS_IMAGE_EXISTS" ] && [ "$CONTAINER" = true ] || [ "$REBUILD" = true ]
 fi
 
 echo "----------------------------------------------------------------------------"
-echo "Filter: $FILTER"
+echo "Filter: ${FILTER[*]}"
 echo "Running tests with command: ${CMD[*]}"
 echo "----------------------------------------------------------------------------"
 "${CMD[@]}"
