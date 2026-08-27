@@ -23,8 +23,27 @@ else
   SELECT_WINDOW=$(get_tmux_option "@session-wizard-windows" "off")
   KILL_SCRIPT='sess=$1; tmux kill-session -t "${sess%:}" 2>/dev/null'
   KILL_BIND="ctrl-x:execute-silent(bash -c '$KILL_SCRIPT' -- {1})+reload($CURRENT_DIR/t --list-sessions $SELECT_WINDOW)"
-  RESULT=$(build_session_list "$SELECT_WINDOW" |
-    $(__fzfcmd) --reverse --print-query --tiebreak=index --bind "$KILL_BIND" --footer 'ctrl-x: kill session' | tail -n 1)
+  PREVIEW=$(get_tmux_option "@session-wizard-preview" "off")
+  if [ "$PREVIEW" == "on" ]; then
+    RESULT=$(build_session_list "$SELECT_WINDOW" |
+      $(__fzfcmd) --reverse --preview 'bash -c '"'"'line="$1"
+  if [[ "$line" == *:* ]]; then
+    sess="${line%%:*}"
+    win="$(echo "$line" | sed -n "s/.*(\\([0-9][0-9]*\\)).*/\\1/p")"
+    if [ -n "$win" ]; then
+      target="${sess}:${win}"
+    else
+      target="${sess}"
+    fi
+    tmux capture-pane -ept "$target" 2>/dev/null
+  else
+    eza --tree --level=1 --color=always "$line"
+  fi
+  '"'"' _ {}' --print-query --tiebreak=index --bind "$KILL_BIND" --footer 'ctrl-x: kill session' | tail -n 1)
+  else
+    RESULT=$(build_session_list "$SELECT_WINDOW" |
+      $(__fzfcmd) --reverse --print-query --tiebreak=index --bind "$KILL_BIND" --footer 'ctrl-x: kill session' | tail -n 1)
+  fi
   if [ -z "$RESULT" ]; then
     exit 0
   fi
