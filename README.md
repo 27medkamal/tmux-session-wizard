@@ -11,7 +11,8 @@ One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [
 - Naming a session after a directory/project
 - Switching sessions
 - Viewing current or creating new sessions in one popup
-- Previewing sessions & directories(with [eza](https://github.com/eza-community/eza)) in one popup
+- Killing sessions from the same popup (`ctrl-x`)
+- Optionally previewing sessions & directories in the popup
 
 ### Elevator Pitch
 
@@ -23,7 +24,7 @@ What if you could use 1 prefix key to do all of this? Read on!
 
 `prefix + T` (customisable) - displays a pop-up with [fzf](https://github.com/junegunn/fzf) which displays the existing sessions followed by recently accessed directories (using [zoxide](https://github.com/ajeetdsouza/zoxide)). Choose the session or the directory and voila! You're in that session. If the session doesn't exist, it will be created.
 
-Inside the pop-up, highlight a session and press `ctrl-x` to kill it. The list refreshes in place without closing the pop-up.
+Inside the pop-up, highlight a session and press `ctrl-x` to kill it. The list refreshes in place without closing the pop-up. (The `ctrl-x: kill session` hint line requires fzf ≥ 0.64; the binding itself works on older fzf versions.)
 
 ### Required
 
@@ -85,7 +86,7 @@ By default, `tmux-session-wizard` gives you a list of open sessions (hence the n
 set -g @session-wizard-windows on # default is off
 ```
 
-By default, `tmux-session-wizard` doesn't previews the sessions or directories. This can be turned on using the setting `@session-wizard-preview`. Add this line to your `.tmux.conf` to enable this behaviour:
+You can enable a preview pane in the popup with `@session-wizard-preview`. Session and window entries preview the target pane's contents; directory entries preview a directory listing, using [eza](https://github.com/eza-community/eza) (`--tree --level=1`) when it's installed and plain `ls` otherwise:
 
 ```tmux
 set -g @session-wizard-preview on # default is off
@@ -143,9 +144,9 @@ You can also run `t` with a relative or absolute path to a directory (similar to
 
 Also, depending on the terminal emulator you use, you can make it always start what that script.
 
-### Extending plugin's functionality
+### Extending the plugin
 
-This is simplified diagram of how the plugin works. You can extend its functionality using the `pre-create-session-hook`.
+This is a simplified diagram of how the plugin works. You can extend its behaviour with the `pre-create-session-hook`.
 
 ```mermaid
 flowchart LR
@@ -157,30 +158,27 @@ flowchart LR
 
 #### pre-create-session-hook
 
-The hook runs every time the plugin is invoked, before checking whether the session already exists. This allows you to modify the session name, the target directory, or both.
+The hook runs every time a session is about to be created or reused for a directory, before checking whether the session already exists. It allows you to modify the session name, the target directory, or both.
 
-The hook receives two positional arguments:
-- `$1` - session name
-- `$2` - target directory
+The hook is invoked as:
 
-To modify values, the hook should print two lines to stdout:
-1. The session name (first line)
-2. The target directory (second line)
+```
+<your-hook> <session-name> <target-directory>
+```
 
-If the hook prints nothing, the original values are used unchanged.
+Contract:
+
+1. Print two lines to stdout (session name, then target directory) to replace both values.
+2. Print nothing to keep the original values.
+3. Exit non-zero to abort: no session is created and nothing is attached.
 
 **Configuration:**
 
-Set the `@session-wizard-pre-create-session-hook` tmux option to a script or command:
-
-```bash
+```tmux
 set -g @session-wizard-pre-create-session-hook '/path/to/hook-script.sh'
 ```
 
-**Examples:**
-These examples are not very realistic usecases, just to see basic usage of hook. More realistic example is in examples folder.
-
-Add a prefix to all session names:
+**Example** — prefix every session name:
 
 ```bash
 #!/bin/bash
@@ -188,32 +186,36 @@ echo "work-$1"
 echo "$2"
 ```
 
-Log session creation without modifying anything (output nothing to keep original values):
+A more complete example is in [`examples/resolve-session-conflict-hook.sh`](examples/resolve-session-conflict-hook.sh). It handles two different directories generating the same session name (e.g. two projects both called `api`): when a conflict is detected it prompts for a new name via fzf and remembers the choice for the rest of the boot.
 
-```bash
-#!/bin/bash
-echo "$(date) - session: $1, dir: $2" >> /tmp/session-wizard.log
-```
+#### Debug logging
 
-#### Resolve session conflict hook
+Set `@session-wizard-log-file` to a writable path to get timestamped debug logs (hook invocations, session creation). Logging is off unless the option is set:
 
-A more complete example is provided in [`examples/resolve-session-conflict-hook.sh`](examples/resolve-session-conflict-hook.sh). It handles the case where two different directories generate the same session name (e.g. both have a subdirectory called `src`). When a conflict is detected, it prompts the user via fzf to pick a new name and remembers the choice in `/tmp/tmux-session-wizard-mappings` (resets on reboot).
-
-```bash
-set -g @session-wizard-pre-create-session-hook '/path/to/resolve-session-conflict-hook.sh'
+```tmux
+set -g @session-wizard-log-file '/tmp/session-wizard.log'
 ```
 
 ### Development
 
-The development environment is built with Nix and Nix's Flakes, if you have it on your system then just run `nix develop` and you are ready to go. Other method is to build the Docker image based on provided Dockerfile:
+Tests use [bats](https://github.com/bats-core/bats-core) with the `bats-support` and `bats-assert` libraries. With those installed locally, run:
+
+```bash
+bats -r ./tests
+```
+
+The integration tests run a tmux server on an isolated socket (`TMUX_TMPDIR`), so they are safe to run on your machine — even from inside a tmux session — without touching your real sessions.
+
+Alternatively, build the Docker image and run the tests in a container:
 
 ```bash
 docker build --tag tmux-session-wizard:dev --file ./Dockerfile .
+docker run --rm -it -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD tmux-session-wizard:dev bats -r ./tests
 ```
 
-To run the tests, just run `bats -r ./tests` for local development environment or `docker run --rm -it -u $(id -u):$(id -g) -v $PWD:$PWD -w $PWD tmux-session-wizard:dev bats -r ./tests` if you are using Docker.
+There is also a helper script, _./scripts/run-tests.sh_; run `./scripts/run-tests.sh -h` for usage.
 
-There is also the helper script for it _./scripts/run-tests.sh_, run `./scripts/run-tests.sh -h` to get more information about usage.
+A community-maintained Nix flake (`nix develop`) also provides a development environment.
 
 ### Inspiration
 
