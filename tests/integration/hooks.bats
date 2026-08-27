@@ -97,6 +97,18 @@ HOOK
   assert_tmux_session_exists "dir"
 }
 
+@test "conflict-resolver example: same name pointing at the same directory is reused silently" {
+  echo "set -g @session-wizard-pre-create-session-hook '$DIR/../../examples/resolve-session-conflict-hook.sh'" >>"$TMUX_CONFIG"
+  mkdir -p "$TEST_DIR/dir"
+  t "$TEST_DIR/dir"
+  assert_tmux_sessions_number 1
+  # Same directory again: hook's same-dir branch keeps the values, no prompt,
+  # no second session
+  t "$TEST_DIR/dir"
+  assert_tmux_session_attached "dir"
+  assert_tmux_sessions_number 1
+}
+
 @test "failing pre-create-session-hook aborts: no session created, nothing attached" {
   local hook_script="$TEST_DIR/hook.sh"
   cat >"$hook_script" <<'HOOK'
