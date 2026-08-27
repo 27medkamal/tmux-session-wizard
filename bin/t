@@ -6,6 +6,19 @@ source "$CURRENT_DIR/../src/helpers.sh"
 # Usage: t <optional zoxide-like dir, relative or absolute path>
 # If no argument is given, a combination of existing sessions and a zoxide query will be displayed in a FZF
 
+# Internal modes used by the fzf popup's ctrl-x binding (kill the highlighted
+# session, then refresh the list in place). Not part of the public CLI.
+case "$1" in
+--list-sessions)
+  build_session_list "$2"
+  exit 0
+  ;;
+--kill-row)
+  kill_session_from_row "$2"
+  exit 0
+  ;;
+esac
+
 # Parse optional argument
 if [ "$*" ]; then
   # Argument is given
@@ -14,8 +27,13 @@ if [ "$*" ]; then
 else
   # No argument is given. Use FZF
   SELECT_WINDOW=$(get_tmux_option "@session-wizard-windows" "off")
+  FZF_ARGS=(--reverse --print-query --tiebreak=index)
+  FZF_ARGS+=(--bind "ctrl-x:execute-silent(\"$CURRENT_DIR/t\" --kill-row {1})+reload(\"$CURRENT_DIR/t\" --list-sessions $SELECT_WINDOW)")
+  if __fzf_version_at_least 0 64; then
+    FZF_ARGS+=(--footer "ctrl-x: kill session")
+  fi
   RESULT=$(build_session_list "$SELECT_WINDOW" |
-    $(__fzfcmd) --reverse --print-query --tiebreak=index | tail -n 1)
+    $(__fzfcmd) "${FZF_ARGS[@]}" | tail -n 1)
   if [ -z "$RESULT" ]; then
     exit 0
   fi

@@ -47,6 +47,44 @@ teardown() {
   assert_output "foo"
 }
 
+# --- kill_session_from_row ------------------------------------------------
+@test "kill_session_from_row kills the session named in a picker row" {
+  function tmux() { echo "tmux $*"; }
+  run kill_session_from_row "alpha:"
+  assert_output "tmux kill-session -t alpha"
+}
+
+@test "kill_session_from_row ignores directory rows" {
+  function tmux() { echo "tmux $*"; }
+  run kill_session_from_row "/opt/tool"
+  assert_output ""
+  run kill_session_from_row "~/projects/wizard"
+  assert_output ""
+}
+
+@test "kill_session_from_row escapes a session literally named ~" {
+  function tmux() { echo "tmux $*"; }
+  run kill_session_from_row "~:"
+  assert_output 'tmux kill-session -t \~'
+}
+
+# --- __fzf_version_at_least -----------------------------------------------
+@test "__fzf_version_at_least compares fzf versions" {
+  function fzf() { echo "0.73.1 (ce4bef75)"; }
+  run __fzf_version_at_least 0 64
+  assert_success
+  run __fzf_version_at_least 0 80
+  assert_failure
+  run __fzf_version_at_least 1 0
+  assert_failure
+  function fzf() { echo "0.29"; }
+  run __fzf_version_at_least 0 64
+  assert_failure
+  function fzf() { return 127; }
+  run __fzf_version_at_least 0 64
+  assert_failure
+}
+
 # --- build_session_list ---------------------------------------------------
 # Stubs shared by the list tests. session_last_attached is a unix timestamp;
 # it is EMPTY (or 0) for sessions that were never attached, e.g. ones restored

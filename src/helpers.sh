@@ -66,10 +66,10 @@ build_session_list() {
   local list
   if [ "$select_window" == "on" ]; then
     list=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}: #{window_name}(#{window_index})\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}")
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}" 2>/dev/null)
   else
     list=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
-#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
+#{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}" 2>/dev/null)
   fi
   # Numeric sort so never-attached sessions (empty/0 timestamp) sink to the
   # bottom; LC_ALL=C because some locales collate blanks in ways that float
@@ -77,4 +77,30 @@ build_session_list() {
   echo "$list" |
     LC_ALL=C sort -rn | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
   zoxide query -l | sed -e "$HOME_REPLACER"
+}
+
+# Kills the session a picker row refers to. Session/window rows have "name:"
+# as their first field; anything else (a directory row) is ignored.
+# $1: the row's first field, i.e. fzf's {1}
+kill_session_from_row() {
+  local first="$1"
+  case "$first" in
+  *:)
+    local session="${first%:}"
+    # Lone ~ would be parsed by tmux as the marked pane; escape it
+    [ "$session" = "~" ] && session='\~'
+    tmux kill-session -t "$session" 2>/dev/null
+    ;;
+  esac
+}
+
+# Succeeds when the fzf on PATH is at least version $1.$2
+__fzf_version_at_least() {
+  local want_major="$1" want_minor="$2" version major minor
+  version=$(fzf --version 2>/dev/null | awk '{print $1}')
+  major=${version%%.*}
+  minor=${version#*.}
+  minor=${minor%%.*}
+  case "$major$minor" in *[!0-9]* | "") return 1 ;; esac
+  [ "$major" -gt "$want_major" ] || { [ "$major" -eq "$want_major" ] && [ "$minor" -ge "$want_minor" ]; }
 }
