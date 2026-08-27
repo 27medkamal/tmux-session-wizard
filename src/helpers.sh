@@ -26,32 +26,6 @@ set_tmux_option() {
   fi
 }
 
-attach_to_tmux_session() {
-  local session_name
-  local window
-
-  session_name="$1"
-  window="$2"
-  # Attach to session
-  # Escape tilde which if it appears by itself, tmux will interpret as a marked target
-  # https://github.com/tmux/tmux/blob/master/cmd-find.c#L1024C51-L1024C57
-  session_name=$(echo "$session_name" | sed 's/^~$/\\~/')
-  # TODO: This should be removed and I should use some kind of test double (mock) for tmux
-  if [ -n "$BATS_TEST_TMPDIR" ]; then
-    echo "$session_name" >"$BATS_TEST_TMPDIR/attached_session"
-    exit 0
-  fi
-  if [ -z "$TMUX" ]; then
-    tmux attach -t "$session_name"
-  else
-    tmux switch-client -t "$session_name"
-  fi
-
-  if [ -n "$window" ]; then
-    tmux select-window -t "$session_name:$window"
-  fi
-}
-
 session_name() {
   if [ "$1" = "--directory" ]; then
     shift
@@ -68,43 +42,6 @@ session_name() {
   fi
 }
 
-create_session() {
-  local session="$1"
-  local dir="$2"
-
-  local pre_hook
-  pre_hook=$(get_tmux_option "@session-wizard-pre-create-session-hook")
-  if [ -n "$pre_hook" ]; then
-    log_message "Running pre-create-session-hook: $pre_hook"
-    local hook_output
-    hook_output=$(eval "$pre_hook" "$session" "$dir")
-    if [ -n "$hook_output" ]; then
-      session=$(echo "$hook_output" | sed -n '1p')
-      dir=$(echo "$hook_output" | sed -n '2p')
-    fi
-  fi
-
-  if ! tmux has-session -t="$session" 2>/dev/null; then
-    tmux new-session -d -s "$session" -c "$dir"
-  fi
-
-  echo "$session"
-}
-
-log_message() {
-  local log_file
-  log_file=$(get_tmux_option "@session-wizard-log-file")
-  if [ -z "$log_file" ]; then
-    return 0
-  fi
-  local message="$1"
-  local timestamp
-  local log_entry
-  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  log_entry="${timestamp} ${message}"
-  echo "$log_entry" >>"$log_file"
-}
-
 HOME_REPLACER=""                                          # default to a noop
 TILDE_REPLACER=""                                         # default to a noop
 echo "$HOME" | grep -E "^[a-zA-Z0-9_/.@-]+$" >/dev/null 2>&1 # chars safe to use in sed (dash last: BSD grep rejects escaped dash mid-bracket)
@@ -119,17 +56,22 @@ __fzfcmd() {
     echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
 }
 
+# Prints the picker candidates: existing sessions (or windows when $1 is "on")
+# ordered by most recently attached, followed by zoxide's directories.
+# Lines are prefixed with #{session_last_attached} for sorting, then the
+# timestamp is cut away. It is empty/0 for sessions never attached (e.g.
+# restored by tmux-resurrect).
 build_session_list() {
   local select_window="$1"
-  local result
+  local list
   if [ "$select_window" == "on" ]; then
-    result=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}: #{window_name}(#{window_index})\
+    list=$(tmux list-windows -a -F "#{session_last_attached} #{session_name}: #{window_name}(#{window_index})\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached,#{?window_active, (attached),},}")
   else
-    result=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
+    list=$(tmux list-sessions -F "#{session_last_attached} #{session_name}: #{session_windows} window(s)\
 #{?session_grouped, (group ,}#{session_group}#{?session_grouped,),}#{?session_attached, (attached),}")
   fi
-  echo "$result" |
-    sort -rn | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
+  echo "$list" |
+    sort -r | (if [ -n "$TMUX" ]; then grep -v " $(tmux display-message -p '#S'):"; else cat; fi) | cut -d' ' -f2-
   zoxide query -l | sed -e "$HOME_REPLACER"
 }

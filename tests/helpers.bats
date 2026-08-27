@@ -1,7 +1,4 @@
 # bats file_tags=unit
-SESSION_EXISTS=0
-SESSION_NOT_EXISTS=1
-
 setup() {
   bats_load_library 'bats-support'
   bats_load_library 'bats-assert'
@@ -50,120 +47,76 @@ teardown() {
   assert_output "foo"
 }
 
-@test "create_session creates new tmux session and echoes session name" {
+# --- build_session_list ---------------------------------------------------
+# Stubs shared by the list tests. session_last_attached is a unix timestamp;
+# it is EMPTY (or 0) for sessions that were never attached, e.g. ones restored
+# by tmux-resurrect.
+_stub_list_commands() {
   function tmux() {
     case "$1" in
-    has-session) return "$SESSION_NOT_EXISTS" ;;
-    new-session) ;;
-    show-option) ;;
+    list-sessions)
+      printf '%s\n' \
+        "1700000000 beta: 2 window(s)" \
+        "1800000000 alpha: 1 window(s) (attached)" \
+        "0 resurrected-a: 1 window(s)" \
+        " resurrected-b: 3 window(s)"
+      ;;
+    list-windows)
+      printf '%s\n' \
+        "1800000000 alpha: vim(1) (attached)" \
+        "1700000000 beta: sh(2)"
+      ;;
+    display-message) echo "current" ;;
     esac
   }
-  export -f tmux
-  run create_session "my-session" "/tmp/my-dir"
-  assert_output "my-session"
+  function zoxide() {
+    [ "$1" = "query" ] && printf '%s\n' "$HOME/projects/wizard" "/opt/tool"
+  }
+  unset TMUX
 }
 
-@test "create_session does not create new session for existing session" {
+@test "build_session_list orders sessions by last attach time, never-attached last" {
+  _stub_list_commands
+  # Force a locale whose collation ignores blanks: with plain 'sort -r' this
+  # made never-attached sessions (empty timestamp) pile up at the top.
+  export LC_ALL=en_US.UTF-8
+  run build_session_list "off"
+  assert_line --index 0 "alpha: 1 window(s) (attached)"
+  assert_line --index 1 "beta: 2 window(s)"
+  assert_line --index 2 "resurrected-a: 1 window(s)"
+  assert_line --index 3 "resurrected-b: 3 window(s)"
+}
+
+@test "build_session_list appends zoxide results with ~ abbreviation" {
+  _stub_list_commands
+  run build_session_list "off"
+  assert_line --index 4 "~/projects/wizard"
+  assert_line --index 5 "/opt/tool"
+}
+
+@test "build_session_list filters out the current session when inside tmux" {
+  _stub_list_commands
   function tmux() {
     case "$1" in
-    has-session) return "$SESSION_EXISTS" ;;
-    new-session)
-      echo "new-session should not be called" >&2
-      return 1
+    list-sessions)
+      printf '%s\n' \
+        "1800000000 current: 1 window(s) (attached)" \
+        "1700000000 other: 2 window(s)"
       ;;
-    show-option) ;;
+    display-message) echo "current" ;;
     esac
   }
-  export -f tmux
-  run create_session "existing-session" "/tmp/dir"
-  assert_output "existing-session"
+  export TMUX="fake,1234,0"
+  run build_session_list "off"
+  refute_line --partial "current:"
+  assert_line --index 0 "other: 2 window(s)"
 }
 
-# NOTE: This setup function is used for the next two tests to verify if the hook's modification of session name and/or target directory will be applied when creating a session.
-_setup_hook_test() {
-  local has_session_result="$1"
-  NEW_SESSION_ARGS_FILE="$BATS_TEST_TMPDIR/new_session_args"
-  function tmux() {
-    case "$1" in
-    has-session) return "$has_session_result" ;;
-    # XXX: This is flaky, based on parameter order of tmux new-session
-    new-session)
-      echo "$4" >"$NEW_SESSION_ARGS_FILE"
-      echo "$6" >>"$NEW_SESSION_ARGS_FILE"
-      ;;
-    show-option)
-      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
-        echo "my_hook"
-      fi
-      ;;
-    esac
-  }
-  function my_hook() {
-    echo "modified-session"
-    echo "/modified/dir"
-  }
-  export NEW_SESSION_ARGS_FILE
-  export -f tmux my_hook
-}
-
-@test "create_session runs pre-create-session-hook and uses its output" {
-  _setup_hook_test "$SESSION_NOT_EXISTS"
-  run create_session "original-session" "/original/dir"
-  assert_output "modified-session"
-  assert_equal "$(sed -n '1p' "$NEW_SESSION_ARGS_FILE")" "modified-session"
-  assert_equal "$(sed -n '2p' "$NEW_SESSION_ARGS_FILE")" "/modified/dir"
-}
-
-@test "create_session runs pre-create-session-hook and creates new session when hook changes name of existing session" {
-  _setup_hook_test "$SESSION_EXISTS"
-  run create_session "original-session" "/original/dir"
-  assert_output "modified-session"
-  assert_equal "$(sed -n '1p' "$NEW_SESSION_ARGS_FILE")" "modified-session"
-  assert_equal "$(sed -n '2p' "$NEW_SESSION_ARGS_FILE")" "/modified/dir"
-}
-
-@test "create_session keeps original values when hook outputs nothing" {
-  function tmux() {
-    case "$1" in
-    has-session) return "$SESSION_NOT_EXISTS" ;;
-    new-session) echo "new-session:$4:$6" ;;
-    show-option)
-      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
-        echo "silent_hook"
-      fi
-      ;;
-    esac
-  }
-  function silent_hook() { :; }
-  export -f tmux silent_hook
-  run create_session "my-session" "/my/dir"
-  assert_line --index 0 "new-session:my-session:/my/dir"
-  assert_line --index 1 "my-session"
-}
-
-@test "create_session hook receives session and dir as arguments" {
-  local hook_args_file="$BATS_TEST_TMPDIR/hook_args"
-  function tmux() {
-    case "$1" in
-    has-session) return "$SESSION_NOT_EXISTS" ;;
-    new-session) ;;
-    show-option)
-      if [ "$3" = "@session-wizard-pre-create-session-hook" ]; then
-        echo "arg_check_hook"
-      fi
-      ;;
-    esac
-  }
-  # Hooks should got session name and session dir
-  function arg_check_hook() {
-    echo "$1" >"$HOOK_ARGS_FILE"
-    echo "$2" >>"$HOOK_ARGS_FILE"
-  }
-  export HOOK_ARGS_FILE="$hook_args_file"
-  export -f tmux arg_check_hook
-  run create_session "test-session" "/test/dir"
-  assert_equal "$(sed -n '1p' "$hook_args_file")" "test-session"
-  assert_equal "$(sed -n '2p' "$hook_args_file")" "/test/dir"
+@test "build_session_list lists windows when select_window is on" {
+  _stub_list_commands
+  run build_session_list "on"
+  assert_line --index 0 "alpha: vim(1) (attached)"
+  assert_line --index 1 "beta: sh(2)"
 }
 
 @test "create session name with last directory in path" {
