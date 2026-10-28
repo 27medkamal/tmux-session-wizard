@@ -3,6 +3,15 @@
 ![GitHub](https://img.shields.io/github/license/27medkamal/tmux-session-wizard)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/27medkamal/tmux-session-wizard)
 
+> [!TIP]
+> **Try [tmux-agent-wizard](https://github.com/27medkamal/tmux-agent-wizard), from the same author.** It does what
+> tmux-session-wizard does (pick a project, then switch to its session or make it, in one popup) and adds coding
+> agents: see which one needs you, get there in one key, and bring your sessions back after a reboot, agents
+> included. It is what we recommend from now on.
+>
+> tmux-session-wizard is not going anywhere: it stays maintained, with fixes and support for new tmux versions.
+> [Moving over](https://27medkamal.com/tmux-agent-wizard/session-wizard/) takes a few minutes.
+
 <img width="500" alt="tmux-session-wizard" src="https://user-images.githubusercontent.com/14043848/195257556-bc2cfe0a-a1c7-4e29-9741-776eaf0caa06.png">
 
 One prefix key to rule them all (with [fzf](https://github.com/junegunn/fzf) & [zoxide](https://github.com/ajeetdsouza/zoxide)):
