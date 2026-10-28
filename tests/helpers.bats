@@ -19,7 +19,12 @@ teardown() {
   # On macOS' stock grep, the old pattern [a-zA-Z0-9\-_/.@] exited 2 ("invalid
   # character range"), silently disabling ~ substitution for every user.
   run env HOME="/Users/some-user_1.name@x" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; echo "$HOME_REPLACER"'
-  assert_output 's|^/Users/some-user_1.name@x|~|'
+  assert_output 's|^/Users/some-user_1\.name@x|~|'
+}
+
+@test "HOME_REPLACER treats dots in HOME literally" {
+  run env HOME="/Users/some-user_1.name@x" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; echo "/Users/some-user_1Xname@x/project" | sed -e "$HOME_REPLACER"'
+  assert_output "/Users/some-user_1Xname@x/project"
 }
 
 @test "TILDE_REPLACER expands ~ back to HOME" {
