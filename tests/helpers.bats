@@ -23,8 +23,9 @@ teardown() {
 }
 
 @test "HOME_REPLACER treats dots in HOME literally" {
-  run env HOME="/Users/some-user_1.name@x" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; echo "/Users/some-user_1Xname@x/project" | sed -e "$HOME_REPLACER"'
-  assert_output "/Users/some-user_1Xname@x/project"
+  run env HOME="/Users/some-user_1.name@x" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; printf "%s\n" "$HOME/project" "/Users/some-user_1Xname@x/project" | sed -e "$HOME_REPLACER"'
+  assert_line --index 0 "~/project"
+  assert_line --index 1 "/Users/some-user_1Xname@x/project"
 }
 
 @test "TILDE_REPLACER expands ~ back to HOME" {
