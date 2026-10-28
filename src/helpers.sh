@@ -131,7 +131,7 @@ echo "$HOME" | grep -E "^[a-zA-Z0-9_/.@-]+$" >/dev/null 2>&1 # chars safe to use
 HOME_SED_SAFE=$?
 if [ $HOME_SED_SAFE -eq 0 ]; then # $HOME should be safe to use in sed
   HOME_SED_PATTERN=$(printf '%s' "$HOME" | sed 's/[.]/\\./g') # "." is the only regex metachar the guard admits; escape it to match $HOME literally
-  HOME_REPLACER="s|^$HOME_SED_PATTERN|~|"
+  HOME_REPLACER="s|^$HOME_SED_PATTERN\$|~|;s|^$HOME_SED_PATTERN/|~/|" # HOME itself or paths under it, like bash's \w: /home/bob leaves /home/bobby alone
   TILDE_REPLACER="s|^~|$HOME|"
 fi
 

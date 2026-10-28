@@ -19,7 +19,16 @@ teardown() {
   # On macOS' stock grep, the old pattern [a-zA-Z0-9\-_/.@] exited 2 ("invalid
   # character range"), silently disabling ~ substitution for every user.
   run env HOME="/Users/some-user_1.name@x" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; echo "$HOME_REPLACER"'
-  assert_output 's|^/Users/some-user_1\.name@x|~|'
+  assert_output 's|^/Users/some-user_1\.name@x$|~|;s|^/Users/some-user_1\.name@x/|~/|'
+}
+
+@test "HOME_REPLACER only abbreviates HOME itself and paths under it" {
+  # A sibling sharing HOME's prefix used to show as "~2/project" (in the shell
+  # "~2" means user 2's home) and name full-path/short-path sessions after it.
+  run env HOME="/Users/some-user" bash -c 'source "'"$SRC_DIR"'/helpers.sh"; printf "%s\n" "$HOME" "$HOME/project" "/Users/some-user2/project" | sed -e "$HOME_REPLACER"'
+  assert_line --index 0 "~"
+  assert_line --index 1 "~/project"
+  assert_line --index 2 "/Users/some-user2/project"
 }
 
 @test "HOME_REPLACER treats dots in HOME literally" {
